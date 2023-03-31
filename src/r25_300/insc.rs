@@ -51,7 +51,7 @@ pub enum Insc<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::r25_300::Insc;
+    use crate::r25_300::insc::Insc;
 
     #[test]
     fn test() {
