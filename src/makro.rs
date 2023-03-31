@@ -12,8 +12,8 @@ macro_rules! define_io_ctx {
                 vec![
                     $((
                         stringify!($field).to_string(),
-                        <$crate::Void as $crate::io_ctx::Reflektor<$t>>::reflected_type()),
-                    )*
+                        <$crate::Void as $crate::io_ctx::Reflektor<$t>>::reflected_type()
+                    ),)*
                 ]
             }
         }

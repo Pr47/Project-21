@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 xjbutil = { version="0.8", default-features=false, features=["void"] }
+
+[dev-dependencies]
+variant_count = "1.1.0"
