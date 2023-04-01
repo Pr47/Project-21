@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-xjbutil = { version="0.8", default-features=false, features=["void"] }
+xjbutil = { version="0.8", default-features=false, features=["zvec", "void"] }
 
 [dev-dependencies]
 variant_count = "1.1.0"
+
+[[bin]]
+name = "pr21"
+path = "src/bin/main.rs"

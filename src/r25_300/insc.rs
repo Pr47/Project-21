@@ -42,11 +42,12 @@ pub enum Insc<'a> {
 
     Jmp { dst: usize },
     JmpIf { check: usize, dst: usize },
-    Call { func: usize, args: &'a [usize], ret: &'a [usize] },
+    Call { func: usize, args: &'a [usize], ret_locs: &'a [usize] },
+    Return { rets: &'a [usize] },
 
     IOSetValue { offset: usize, src: usize },
     IOGetValue { offset: usize, dst: usize },
-    CallFFI { func: usize, args: &'a [usize], ret: &'a [usize] }
+    CallFFI { func: usize, args: &'a [usize], ret_locs: &'a [usize] }
 }
 
 #[cfg(test)]
