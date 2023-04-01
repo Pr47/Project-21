@@ -33,18 +33,18 @@ macro_rules! impl_uop_fn {
     }
 }
 
-pub struct Combustor<'a, CTX: IOContext> {
-    pub io_ctx: CTX,
+pub struct Combustor<'a, 'ctx, CTX: IOContext> {
+    pub io_ctx: &'ctx mut CTX,
 
     stack: Stack<'a>,
     out_buf: ZeroVec<RtValue>,
     in_buf: ZeroVec<RtValue>,
 }
 
-impl<'a, CTX> Combustor<'a, CTX>
+impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
     where CTX: IOContext
 {
-    pub fn new(io_ctx: CTX) -> Self {
+    pub fn new(io_ctx: &'ctx mut CTX) -> Self {
         Self {
             io_ctx,
 
