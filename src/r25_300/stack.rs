@@ -1,26 +1,21 @@
 use xjbutil::zvec::{ZeroVec, TrivialInit};
-
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union RtValue {
-    i: i32,
-    f: f32,
-    b: bool
-}
+use crate::r25_300::value::RtValue;
 
 unsafe impl TrivialInit for RtValue {}
 
 #[derive(Copy, Clone)]
 pub struct StackFrame<'a> {
+    ret_addr: usize,
     start_idx: usize,
     end_idx: usize,
-    ret_locs: &'a [usize]
+    ret_locs: &'a [usize],
 }
 
 impl<'a> StackFrame<'a> {
     #[inline(always)]
-    pub fn new(start_idx: usize, end_idx: usize, ret_locs: &'a [usize]) -> Self {
+    pub fn new(ret_addr: usize, start_idx: usize, end_idx: usize, ret_locs: &'a [usize]) -> Self {
         Self {
+            ret_addr,
             start_idx,
             end_idx,
             ret_locs
@@ -30,12 +25,12 @@ impl<'a> StackFrame<'a> {
 
 impl StackFrame<'_> {
     #[inline(always)]
-    pub fn get_value<'a>(&'a self, stack: &'_ Stack<'_>, idx: usize) -> RtValue {
+    pub unsafe fn get_value<'a>(&'a self, stack: &'_ Stack<'_>, idx: usize) -> RtValue {
         *stack.values.get_unchecked(self.start_idx + idx)
     }
 
     #[inline(always)]
-    pub fn set_value<'a>(&'a self, stack: &'_ mut Stack<'_>, idx: usize, value: RtValue) {
+    pub unsafe fn set_value<'a>(&'a self, stack: &'_ mut Stack<'_>, idx: usize, value: RtValue) {
         *stack.values.get_unchecked_mut(self.start_idx + idx) = value;
     }
 }
@@ -50,7 +45,7 @@ pub struct Stack<'a> {
 impl Stack<'_> {
     pub fn new() -> Self {
         Self {
-            values: ZeroVec::new(),
+            values: ZeroVec::with_capacity(32),
             frames: Vec::new()
         }
     }
@@ -62,12 +57,18 @@ impl<'a> Stack<'a> {
         debug_assert!(self.values.is_empty());
 
         self.values.resize(frame_size);
-        let frame = StackFrame::new(0, frame_size, &[]);
+        let frame = StackFrame::new(0, 0, frame_size, &[]);
         self.frames.push(frame);
         frame
     }
 
-    pub fn call_enter_frame(&mut self, frame_size: usize, args: &[usize], ret_locs: &'a [usize]) -> StackFrame<'a> {
+    pub unsafe fn call_enter_frame(
+        &mut self,
+        ret_addr: usize,
+        frame_size: usize,
+        args: &[usize],
+        ret_locs: &'a [usize]
+    ) -> StackFrame<'a> {
         debug_assert!(!self.frames.is_empty());
 
         let last_frame = *(unsafe { self.frames.last().unwrap_unchecked() });
@@ -76,7 +77,7 @@ impl<'a> Stack<'a> {
 
         self.values.resize(end_idx);
 
-        let frame = StackFrame::new(start_idx, end_idx, ret_locs);
+        let frame = StackFrame::new(ret_addr, start_idx, end_idx, ret_locs);
         let args_count = args.len();
         for i in 0..args_count {
             let arg = unsafe { *args.get_unchecked(i) };
@@ -88,7 +89,7 @@ impl<'a> Stack<'a> {
         frame
     }
 
-    pub fn exit_frame(&mut self, rets: &[usize]) -> Option<StackFrame<'a>> {
+    pub unsafe fn exit_frame(&mut self, rets: &[usize]) -> Option<(StackFrame<'a>, usize)> {
         debug_assert!(!self.frames.is_empty());
 
         let prev_frame = unsafe { self.frames.pop().unwrap_unchecked() };
@@ -100,7 +101,7 @@ impl<'a> Stack<'a> {
                 let value = prev_frame.get_value(self, ret);
                 current_frame.set_value(self, ret_loc, value);
             }
-            Some(current_frame)
+            Some((current_frame, prev_frame.ret_addr))
         } else {
             None
         }

@@ -57,5 +57,6 @@ mod test {
     #[test]
     fn test() {
         dbg!(Insc::VARIANT_COUNT);
+        dbg!(std::mem::size_of::<Insc>());
     }
 }
