@@ -1,17 +1,17 @@
 #[macro_export]
 macro_rules! define_io_ctx {
-    ($(#[$m:meta])? struct $name:ident { $($field:ident : $t:ty $(,)?)* }) => {
+    ($(#[$m:meta])? struct $name:ident { $([$rename:ident] $field:ident : $t:ty $(,)?)* }) => {
         $(#[$m])?
         #[allow(dead_code)]
         pub struct $name {
-            pub $($field : $t),*
+            $(pub $field : $t),*
         }
 
         impl $crate::io_ctx::IOContext for $name {
             fn metadata() -> Vec<(String, $crate::io_ctx::Type21)> {
                 vec![
                     $((
-                        stringify!($field).to_string(),
+                        stringify!($rename).to_string(),
                         <$crate::Void as $crate::io_ctx::Reflektor<$t>>::reflected_type()
                     ),)*
                 ]
@@ -27,11 +27,11 @@ mod test {
     #[test] fn test() {
         define_io_ctx!(
             struct S {
-                a: i32,
-                b: i32,
-                c: f32,
-                d: i32,
-                e: f32
+                [g_a] a: i32,
+                [g_b] b: i32,
+                [g_c] c: f32,
+                [g_d] d: i32,
+                [g_e] e: f32
             }
         );
 
