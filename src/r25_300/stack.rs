@@ -62,6 +62,10 @@ impl<'a> Stack<'a> {
         frame
     }
 
+    pub unsafe fn last_frame(&self) -> StackFrame<'a> {
+        *self.frames.last().unwrap_unchecked()
+    }
+
     pub unsafe fn call_enter_frame(
         &mut self,
         ret_addr: usize,

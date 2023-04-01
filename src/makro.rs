@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! define_io_ctx {
-    ($(#[$m:meta])? struct $name:ident { $([$rename:ident] $field:ident : $t:ty $(,)?)* }) => {
+    ($(#[$m:meta])? struct $name:ident { $($rename:ident => $field:ident : $t:ty $(,)?)* }) => {
         $(#[$m])?
         #[allow(dead_code)]
         pub struct $name {
@@ -27,11 +27,11 @@ mod test {
     #[test] fn test() {
         define_io_ctx!(
             struct S {
-                [g_a] a: i32,
-                [g_b] b: i32,
-                [g_c] c: f32,
-                [g_d] d: i32,
-                [g_e] e: f32
+                g_a => a: i32,
+                g_b => b: i32,
+                g_c => c: f32,
+                g_d => d: i32,
+                g_e => e: f32
             }
         );
 

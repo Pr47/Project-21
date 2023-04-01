@@ -54,11 +54,22 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
         }
     }
 
-    pub unsafe fn combust(&mut self, compiled: &Compiled<'a>, entry: usize) {
+    pub unsafe fn combust(
+        &mut self,
+        compiled: &Compiled<'a>,
+        entry: usize
+    ) -> Option<usize> {
         let entry_fn = *compiled.func.get_unchecked(entry);
+        self.stack.enter_frame(entry_fn.frame_size);
+        self.combust_resume(compiled, entry_fn.addr)
+    }
 
-        let mut insc_ptr = entry_fn.addr;
-        let mut current_frame = self.stack.enter_frame(entry_fn.frame_size);
+    pub unsafe fn combust_resume(
+        &mut self,
+        compiled: &Compiled<'a>,
+        mut insc_ptr: usize
+    ) -> Option<usize> {
+        let mut current_frame = self.stack.last_frame();
 
         loop {
             match unsafe { compiled.code.get_unchecked(insc_ptr) } {
@@ -191,9 +202,14 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
                         let dst = *ret_locs.get_unchecked(i);
                         current_frame.set_value(&mut self.stack, dst, ret);
                     }
+                },
+                Insc::Yield => {
+                    return Some(insc_ptr + 1)
                 }
             }
             insc_ptr += 1;
         }
+
+        None
     }
 }

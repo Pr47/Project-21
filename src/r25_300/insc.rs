@@ -47,7 +47,9 @@ pub enum Insc<'a> {
 
     IOSetValue { offset: usize, src: usize },
     IOGetValue { offset: usize, dst: usize },
-    CallFFI { func: usize, args: &'a [usize], ret_locs: &'a [usize] }
+    CallFFI { func: usize, args: &'a [usize], ret_locs: &'a [usize] },
+
+    Yield
 }
 
 #[cfg(test)]

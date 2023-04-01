@@ -1,0 +1,9 @@
+extern int g_a, g_b, g_c;
+
+int add(int a, int b) {
+  return a + b;
+}
+
+void entry() {
+  g_c = add(g_a * g_a, g_b * g_b);
+}
