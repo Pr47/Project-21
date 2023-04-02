@@ -53,6 +53,8 @@ pub trait SyntaxVisitor {
         step: Self::ExprResult,
         body: Self::StmtResult
     ) -> Self::StmtResult;
+    fn visit_break_stmt(&mut self) -> Self::StmtResult;
+    fn visit_continue_stmt(&mut self) -> Self::StmtResult;
 
     fn visit_var_decl(
         &mut self,

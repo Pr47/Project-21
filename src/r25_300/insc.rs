@@ -21,7 +21,7 @@ pub enum Insc<'a> {
     NegateFloat { src: usize, dst: usize },
 
     Eq { lhs: usize, rhs: usize, dst: usize },
-    Neq { lhs: usize, rhs: usize, dst: usize },
+    Ne { lhs: usize, rhs: usize, dst: usize },
 
     LtInt { lhs: usize, rhs: usize, dst: usize },
     LtFloat { lhs: usize, rhs: usize, dst: usize },

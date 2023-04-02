@@ -12,7 +12,7 @@ pub enum BinaryOp {
     Div,
     Mod,
     Eq,
-    Neq,
+    Ne,
     Lt,
     Le,
     Gt,

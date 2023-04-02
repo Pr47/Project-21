@@ -101,7 +101,7 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
                     impl_uop!(f, &mut self.stack, current_frame, src, dst, -),
                 Insc::Eq { lhs, rhs, dst } =>
                     impl_binop!(repr, &mut self.stack, current_frame, lhs, rhs, dst, ==),
-                Insc::Neq { lhs, rhs, dst } =>
+                Insc::Ne { lhs, rhs, dst } =>
                     impl_binop!(repr, &mut self.stack, current_frame, lhs, rhs, dst, !=),
                 Insc::LtInt { lhs, rhs, dst } =>
                     impl_binop!(i, &mut self.stack, current_frame, lhs, rhs, dst, <),
