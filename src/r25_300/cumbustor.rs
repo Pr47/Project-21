@@ -167,7 +167,6 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
                 },
                 Insc::IOSetValue { offset, src } => {
                     let src = current_frame.get_value(&mut self.stack, *src);
-                    // just unsafely write memory to destination offset
                     (&mut self.io_ctx as *mut _ as *mut u8)
                         .add(*offset)
                         .write(&src as *const _ as _);
