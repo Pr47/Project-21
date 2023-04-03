@@ -7,7 +7,6 @@ use super::expect_token;
 use super::stmt::parse_block_stmt;
 use super::ty::parse_types;
 
-
 pub fn parse_top_level_decl<SV>(
     sv: &mut SV,
     tokens: &[Token],
