@@ -24,7 +24,12 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_assign(
         &mut self,
-        names: Vec<&str>,
+        names: &[&str],
+        value: Self::ExprResult
+    ) -> Result<Self::ExprResult, Self::Error>;
+    fn visit_assign2(
+        &mut self,
+        names: &[&str],
         value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_type_cast(
@@ -75,9 +80,9 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::DeclResult, Self::Error>;
     fn visit_func_decl(
         &mut self,
-        ty: Option<Type21>,
+        ty: &[Type21],
         name: &str,
-        params: Vec<(Option<Type21>, &str)>,
-        body: Vec<Self::ExprResult>
+        params: &[(Type21, &str)],
+        body: Option<Self::StmtResult>
     ) -> Result<Self::DeclResult, Self::Error>;
 }
