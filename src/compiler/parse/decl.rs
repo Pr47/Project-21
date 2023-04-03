@@ -4,6 +4,7 @@ use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
 use super::expect_token;
+use super::stmt::parse_block_stmt;
 use super::ty::parse_types;
 
 
@@ -67,7 +68,7 @@ pub fn parse_func_decl<SV>(
                 .map_err(|e| CompileError::sv_error(e, cur_token.line))
         },
         TokenData::SymLBrace => {
-            let body = todo!();
+            let body = parse_block_stmt(sv, tokens, cursor)?;
             sv.visit_func_decl(&ret_types, &name, &params, Some(body))
                 .map_err(|e| CompileError::sv_error(e, cur_token.line))
         },

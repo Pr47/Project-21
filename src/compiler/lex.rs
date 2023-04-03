@@ -17,6 +17,7 @@ pub enum TokenData {
     KwdContinue,
 
     // Operators
+    OpAssign,
     OpAdd,
     OpSub,
     OpMul,

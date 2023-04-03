@@ -71,6 +71,14 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_break_stmt(&mut self) -> Result<Self::StmtResult, Self::Error>;
     fn visit_continue_stmt(&mut self) -> Result<Self::StmtResult, Self::Error>;
+    fn visit_return_stmt(
+        &mut self,
+        value: Option<Self::ExprResult>
+    ) -> Result<Self::StmtResult, Self::Error>;
+    fn visit_block_stmt(
+        &mut self,
+        stmts: Vec<Self::StmtResult>
+    ) -> Result<Self::StmtResult, Self::Error>;
 
     fn visit_var_decl(
         &mut self,
