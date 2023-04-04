@@ -1,13 +1,19 @@
 use crate::compiler::CompileError;
-use crate::compiler::lex::Token;
+use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::visit::SyntaxVisitor;
 
 pub fn parse_expr<SV>(
-    _sv: &mut SV,
-    _tokens: &[Token],
-    _cursor: &mut usize
+    sv: &mut SV,
+    tokens: &[Token],
+    cursor: &mut usize
 ) -> Result<SV::ExprResult, CompileError<SV::Error>>
     where SV: SyntaxVisitor
 {
-    todo!()
+    let current_token = &tokens[*cursor];
+    match current_token.data {
+        TokenData::SymLBracket => parse_multi_assign_expr(sv, tokens, cursor),
+        TokenData::Ident(name) => {
+        },
+        _ => parse_non_assign_expr()
+    }
 }
