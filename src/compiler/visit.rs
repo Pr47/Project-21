@@ -93,4 +93,9 @@ pub trait SyntaxVisitor {
         params: &[(Type21, &str)],
         body: Option<Self::StmtResult>
     ) -> Result<Self::DeclResult, Self::Error>;
+    fn visit_const_decl(
+        &mut self,
+        name: &str,
+        init: Self::ExprResult
+    ) -> Result<Self::DeclResult, Self::Error>;
 }

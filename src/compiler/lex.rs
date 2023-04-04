@@ -5,9 +5,11 @@ pub enum TokenData {
     LitFloat(f32),
 
     // Keywords
+    KwdConst,
     KwdInt,
     KwdFloat,
     KwdVar,
+    KwdVoid,
     KwdReturn,
     KwdIf,
     KwdElse,

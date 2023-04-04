@@ -1,6 +1,8 @@
 use smallvec::SmallVec;
 use crate::compiler::CompileError;
 use crate::compiler::lex::{Token, TokenData};
+use crate::compiler::parse::expect_n_consume;
+use crate::compiler::parse::expr::parse_expr;
 use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
 use super::expect_token;
@@ -16,9 +18,11 @@ pub fn parse_top_level_decl<SV>(
 {
     let cur_token = &tokens[*cursor];
     match cur_token.data {
-        TokenData::SymLBracket 
+        TokenData::SymLBracket
+        | TokenData::KwdVoid
         | TokenData::KwdInt
         | TokenData::KwdFloat => parse_func_decl(sv, tokens, cursor),
+        TokenData::KwdConst => parse_const_decl(sv, tokens, cursor),
         _ => Err(CompileError::syntax_error(cur_token.line))
     }
 }
@@ -53,9 +57,17 @@ pub fn parse_func_decl<SV>(
                     return Err(CompileError::syntax_error(cur_token.line));
                 };
 
+                *cursor += 2;
                 params.push((Type21::from_token(cur_token), name));
             },
             _ => return Err(CompileError::syntax_error(cur_token.line))
+        }
+
+        let cur_token = &tokens[*cursor];
+        if cur_token.data == TokenData::SymComma {
+            *cursor += 1;
+        } else if cur_token.data != TokenData::SymRParen {
+            return Err(CompileError::syntax_error(cur_token.line));
         }
     }
 
@@ -73,4 +85,28 @@ pub fn parse_func_decl<SV>(
         },
         _ => Err(CompileError::syntax_error(cur_token.line))
     }
+}
+
+pub fn parse_const_decl<SV>(
+    sv: &mut SV,
+    tokens: &[Token],
+    cursor: &mut usize
+) -> Result<SV::DeclResult, CompileError<SV::Error>>
+    where SV: SyntaxVisitor
+{
+    *cursor += 1;
+
+    let cur_token = &tokens[*cursor];
+    let TokenData::Ident(name) = &cur_token.data else {
+        return Err(CompileError::syntax_error(cur_token.line));
+    };
+
+    *cursor += 1;
+    expect_n_consume(sv, tokens, TokenData::OpAssign, cursor)?;
+
+    let expr = parse_expr(sv, tokens, cursor)?;
+    expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+
+    sv.visit_const_decl(name, expr)
+        .map_err(|e| CompileError::sv_error(e, cur_token.line))
 }
