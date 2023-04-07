@@ -9,10 +9,11 @@ macro_rules! define_io_ctx {
         }
 
         impl $crate::io_ctx::IOContext for $name {
-            fn metadata() -> Vec<(String, $crate::io_ctx::Type21)> {
+            fn metadata() -> $crate::io_ctx::IOContextMetadata {
                 vec![
                     $((
                         stringify!($rename).to_string(),
+                        stringify!($field).to_string(),
                         <$crate::Void as $crate::io_ctx::Reflektor<$t>>::reflected_type()
                     ),)*
                 ]

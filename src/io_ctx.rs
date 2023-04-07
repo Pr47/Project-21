@@ -22,7 +22,7 @@ impl Reflektor<f32> for Void {
     #[inline(always)] fn reflected_type() -> Type21 { Type21::Float32 }
 }
 
-pub type IOContextMetadata = Vec<(String, Type21)>;
+pub type IOContextMetadata = Vec<(String, String, Type21)>;
 
 pub trait IOContext {
     fn metadata() -> IOContextMetadata;
