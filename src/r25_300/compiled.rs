@@ -1,4 +1,4 @@
-use crate::r25_300::ffi::RawFunction;
+use crate::value::RawFunction;
 use crate::r25_300::insc::Insc;
 
 #[derive(Debug, Copy, Clone)]

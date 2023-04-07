@@ -3,7 +3,7 @@ use crate::io_ctx::IOContext;
 use crate::r25_300::compiled::Compiled;
 use crate::r25_300::insc::Insc;
 use crate::r25_300::stack::Stack;
-use crate::r25_300::value::RtValue;
+use crate::value::RtValue;
 
 macro_rules! impl_binop {
     ($f:ident, $s:expr, $cf:expr, $lhs:expr, $rhs:expr, $dst:expr, $op:tt) => {

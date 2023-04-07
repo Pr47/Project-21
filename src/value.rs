@@ -25,3 +25,5 @@ impl From<bool> for RtValue {
         Self { b }
     }
 }
+
+pub type RawFunction = unsafe fn(args: *mut RtValue, n_args: u32, rets: *mut RtValue);

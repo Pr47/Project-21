@@ -1,5 +1,5 @@
 use xjbutil::zvec::{ZeroVec, TrivialInit};
-use crate::r25_300::value::RtValue;
+use crate::value::RtValue;
 
 unsafe impl TrivialInit for RtValue {}
 

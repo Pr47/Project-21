@@ -1,0 +1,6 @@
+void entry() {
+    while (g_frame_id <= 30) {
+        g_rotation_left_3 = 0.5 * g_frame_id;
+        yield;
+    }
+}

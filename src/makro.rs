@@ -2,6 +2,7 @@
 macro_rules! define_io_ctx {
     ($(#[$m:meta])? struct $name:ident { $($rename:ident => $field:ident : $t:ty $(,)?)* }) => {
         $(#[$m])?
+        #[repr(C)]
         #[allow(dead_code)]
         pub struct $name {
             $(pub $field : $t),*
