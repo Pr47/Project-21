@@ -27,6 +27,10 @@ pub fn parse_types<SV>(
             *cursor += 1;
             Ok(smallvec![Type21::from_token(cur_token)])
         },
+        TokenData::KwdVoid => {
+            *cursor += 1;
+            Ok(smallvec![])
+        },
         TokenData::SymLBracket => {
             parse_type_list(sv, tokens, cursor)
         },
@@ -41,7 +45,7 @@ pub fn parse_type_list<SV>(
 ) -> Result<SmallVec<[Type21; 2]>, CompileError<SV::Error>>
     where SV: SyntaxVisitor
 {
-    assert!(tokens[*cursor].data == TokenData::SymLBracket);
+    assert_eq!(tokens[*cursor].data, TokenData::SymLBracket);
     *cursor += 1;
 
     let mut types = SmallVec::new();
