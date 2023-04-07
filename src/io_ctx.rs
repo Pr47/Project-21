@@ -1,4 +1,7 @@
+use std::sync::{Arc, Mutex};
+use once_cell::sync::OnceCell;
 use xjbutil::void::Void;
+use crate::value::RtValue;
 
 #[derive(Debug, Clone)]
 pub enum Type21 {
@@ -22,6 +25,8 @@ impl Reflektor<f32> for Void {
     #[inline(always)] fn reflected_type() -> Type21 { Type21::Float32 }
 }
 
+pub type IOContextMetadata = Vec<(String, Type21)>;
+
 pub trait IOContext {
-    fn metadata() -> Vec<(String, Type21)>;
+    fn metadata() -> IOContextMetadata;
 }
