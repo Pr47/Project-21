@@ -8,12 +8,12 @@ fn test_lex_simple() {
 
 #[test]
 fn test_lex_interp() {
-    let tokens = tokenize(include_str!("./test_resc/interp.bis")).unwrap();
+    let tokens = tokenize(include_str!("interp.bis")).unwrap();
     dbg!(tokens);
 }
 
 #[test]
 fn test_lex_spacium() {
-    let tokens = tokenize(include_str!("./test_resc/spacium.bis")).unwrap();
+    let tokens = tokenize(include_str!("spacium.bis")).unwrap();
     dbg!(tokens);
 }
