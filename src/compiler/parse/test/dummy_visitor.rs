@@ -12,7 +12,7 @@ impl SyntaxVisitor for DummyVisitor {
     type DeclResult = ();
     type Error = Infallible;
 
-    fn visit_ident(&mut self, _ident: &str) -> Self::ExprResult {}
+    fn visit_ident(&mut self, _ident: &str) -> Result<Self::ExprResult, Self::Error> { Ok(()) }
 
     fn visit_lit_int(&mut self, _value: i32) -> Self::ExprResult {}
 

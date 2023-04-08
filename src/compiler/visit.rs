@@ -8,7 +8,7 @@ pub trait SyntaxVisitor {
     type DeclResult;
     type Error;
 
-    fn visit_ident(&mut self, ident: &str) -> Self::ExprResult;
+    fn visit_ident(&mut self, ident: &str) -> Result<Self::ExprResult, Self::Error>;
     fn visit_lit_int(&mut self, value: i32) -> Self::ExprResult;
     fn visit_lit_float(&mut self, value: f32) -> Self::ExprResult;
     fn visit_lit_bool(&mut self, value: bool) -> Self::ExprResult;

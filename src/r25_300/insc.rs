@@ -1,11 +1,10 @@
-#[cfg(test)]
-use variant_count::VariantCount;
+use crate::value::RtValue;
+#[cfg(test)] use variant_count::VariantCount;
 
 #[cfg_attr(test, derive(VariantCount))]
 #[derive(Debug, Clone)]
-pub enum Insc<'a> {
-    IntConst { value: i32, dst: usize },
-    FloatConst { value: f32, dst: usize },
+pub enum Insc {
+    Const { value: RtValue, dst: usize },
 
     AddInt { lhs: usize, rhs: usize, dst: usize },
     AddFloat { lhs: usize, rhs: usize, dst: usize },
@@ -42,15 +41,16 @@ pub enum Insc<'a> {
 
     Jmp { dst: usize },
     JmpIf { check: usize, dst: usize },
-    Call { func: usize, args: &'a [usize], ret_locs: &'a [usize] },
-    Return { rets: &'a [usize] },
+    Call { func: usize, args: Box<[usize]>, ret_locs: Box<[usize]> },
+    Return { rets: Box<[usize]> },
 
     IOSetValue { offset: usize, src: usize },
     IOGetValue { offset: usize, dst: usize },
-    CallFFI { func: usize, args: &'a [usize], ret_locs: &'a [usize] },
+    CallFFI { func: usize, args: Box<[usize]>, ret_locs: Box<[usize]> },
 
     Yield
 }
+
 
 #[cfg(test)]
 mod test {

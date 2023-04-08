@@ -56,7 +56,7 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
 
     pub unsafe fn combust(
         &mut self,
-        compiled: &Compiled<'a>,
+        compiled: &'a Compiled,
         entry: usize
     ) -> Option<usize> {
         let entry_fn = *compiled.func.get_unchecked(entry);
@@ -66,17 +66,15 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
 
     pub unsafe fn combust_resume(
         &mut self,
-        compiled: &Compiled<'a>,
+        compiled: &'a Compiled,
         mut insc_ptr: usize
     ) -> Option<usize> {
         let mut current_frame = self.stack.last_frame();
 
         loop {
             match unsafe { compiled.code.get_unchecked(insc_ptr) } {
-                Insc::IntConst { value, dst } =>
-                    current_frame.set_value(&mut self.stack, *dst, RtValue::from(*value)),
-                Insc::FloatConst { value, dst } =>
-                    current_frame.set_value(&mut self.stack, *dst, RtValue::from(*value)),
+                Insc::Const { value, dst } =>
+                    current_frame.set_value(&mut self.stack, *dst, *value),
                 Insc::AddInt { lhs, rhs, dst } =>
                     impl_binop!(i, &mut self.stack, current_frame, lhs, rhs, dst, +),
                 Insc::AddFloat { lhs, rhs, dst } =>

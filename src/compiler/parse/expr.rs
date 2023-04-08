@@ -163,7 +163,8 @@ pub fn parse_atom_expr<'a, SV>(
             if let TokenData::SymLParen = &tokens[*cursor].data {
                 parse_func_call(sv, tokens, cursor, name)
             } else {
-                Ok(sv.visit_ident(name))
+                sv.visit_ident(name)
+                    .map_err(|e| CompileError::sv_error(e, current_token.line))
             }
         },
         TokenData::LitInt(value) => {

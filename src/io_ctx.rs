@@ -1,9 +1,11 @@
 use xjbutil::void::Void;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Type21 {
     Int32 = 1,
-    Float32 = 2
+    Float32 = 2,
+
+    Bool = 3
 }
 
 impl Type21 {

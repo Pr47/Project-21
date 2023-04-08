@@ -1,3 +1,6 @@
+use std::fmt::{Debug, Formatter};
+use std::hash::{Hash, Hasher};
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union RtValue {
@@ -6,6 +9,12 @@ pub union RtValue {
     pub b: bool,
 
     pub repr: u32
+}
+
+impl Debug for RtValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:X}", unsafe { self.repr })
+    }
 }
 
 impl From<i32> for RtValue {
@@ -23,6 +32,20 @@ impl From<f32> for RtValue {
 impl From<bool> for RtValue {
     #[inline(always)] fn from(b: bool) -> Self {
         Self { b }
+    }
+}
+
+impl PartialEq for RtValue {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { self.repr == other.repr }
+    }
+}
+
+impl Eq for RtValue {}
+
+impl Hash for RtValue {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        unsafe { self.repr.hash(state); }
     }
 }
 
