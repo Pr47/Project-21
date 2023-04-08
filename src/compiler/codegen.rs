@@ -414,9 +414,12 @@ impl<CTX: IOContext> SyntaxVisitor for CodegenContext<CTX> {
 
     fn visit_assign(
         &mut self,
-        names: &str,
+        name: &str,
         value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error> {
+        let ty = value.type21();
+        let value_addr = self.ensure_addr(value);
+
         todo!()
     }
 

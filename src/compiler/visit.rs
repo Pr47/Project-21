@@ -24,7 +24,7 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_assign(
         &mut self,
-        names: &str,
+        name: &str,
         value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_assign2(
