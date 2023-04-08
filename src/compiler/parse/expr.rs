@@ -6,18 +6,6 @@ use crate::compiler::parse::expect_n_consume;
 use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
 
-fn is_assign_op(token_data: &TokenData) -> bool {
-    match token_data {
-        TokenData::OpAssign
-        | TokenData::OpAddAssign
-        | TokenData::OpSubAssign
-        | TokenData::OpMulAssign
-        | TokenData::OpDivAssign
-        | TokenData::OpModAssign => true,
-        _ => false
-    }
-}
-
 fn token_as_lit_bool(token_data: &TokenData) -> bool {
     match token_data {
         TokenData::KwdTrue => true,
@@ -38,7 +26,7 @@ pub fn parse_expr<SV>(
         TokenData::SymLBracket => parse_multi_assign_expr(sv, tokens, cursor),
         TokenData::Ident(_) => {
             let next_token = &tokens[*cursor + 1];
-            if is_assign_op(&next_token.data) {
+            if next_token.data == TokenData::OpAssign {
                 parse_single_assign_expr(sv, tokens, cursor)
             } else {
                 parse_bin_expr(sv, tokens, cursor)
@@ -79,12 +67,11 @@ pub fn parse_single_assign_expr<SV>(
     let TokenData::Ident(ident) = &tokens[*cursor].data else { unreachable!() };
     *cursor += 1;
 
-    let assign_op = &tokens[*cursor].data;
-    *cursor += 1;
+    expect_n_consume(tokens, TokenData::OpAssign, cursor)?;
 
     let expr = parse_bin_expr(sv, tokens, cursor)?;
 
-    sv.visit_assign(assign_op, ident, expr)
+    sv.visit_assign(ident, expr)
         .map_err(|e| CompileError::sv_error(e, line))
 }
 

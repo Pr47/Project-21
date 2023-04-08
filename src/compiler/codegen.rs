@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use crate::compiler::lex::TokenData;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::{IOContext, IOContextMetadata, Type21};
@@ -146,7 +145,7 @@ impl ExprResult {
 }
 
 impl<CTX: IOContext> CodegenContext<CTX> {
-    fn ensure_stable_addr(&mut self, v: ExprResult) -> usize {
+    fn ensure_addr(&mut self, v: ExprResult) -> usize {
         match v {
             ExprResult::StackAddr(_, addr) => addr,
             ExprResult::ConstEval(_, value) => {
@@ -158,6 +157,62 @@ impl<CTX: IOContext> CodegenContext<CTX> {
                     addr
                 }
             }
+        }
+    }
+}
+
+macro_rules! impl_arithmetic_binop_constfold {
+    ($ty:expr, $lhs:expr, $rhs:expr, $output_ty:expr, $op:tt) => {
+        match $ty {
+            Type21::Int32 => Ok(ExprResult::ConstEval(
+                $output_ty,
+                unsafe { $lhs.i $op $rhs.i }.into()
+            )),
+            Type21::Float32 => Ok(ExprResult::ConstEval(
+                $output_ty,
+                unsafe { $lhs.f $op $rhs.f }.into()
+            )),
+            _ => Err(format!("unsupported type for arithmetic binop: {:?}", $ty))
+        }
+    }
+}
+
+macro_rules! impl_logic_binop_constfold {
+    ($ty:expr, $lhs:expr, $rhs:expr, $op:tt) => {
+        match $ty {
+            Type21::Bool => Ok(ExprResult::ConstEval(
+                Type21::Bool,
+                unsafe { $lhs.b $op $rhs.b }.into()
+            )),
+            _ => Err(format!("unsupported type for logic binop: {:?}", $ty))
+        }
+    }
+}
+
+macro_rules! impl_arithmetic_binop {
+    ($this:expr, $ty:expr, $lhs:expr, $rhs:expr, $output_ty:expr, $dst: expr, $int_insc:ident, $float_insc:ident) => {
+        match $ty {
+            Type21::Int32 => {
+                $this.compiled.code.push(Insc::$int_insc { lhs: $lhs, rhs: $rhs, dst: $dst });
+                Ok(ExprResult::StackAddr($output_ty, $dst))
+            },
+            Type21::Float32 => {
+                $this.compiled.code.push(Insc::$float_insc { lhs: $lhs, rhs: $rhs, dst: $dst });
+                Ok(ExprResult::StackAddr($output_ty, $dst))
+            },
+            _ => Err(format!("unsupported type for arithmetic binop: {:?}", $ty))
+        }
+    }
+}
+
+macro_rules! impl_logic_binop {
+    ($this:expr, $ty:expr, $lhs:expr, $rhs:expr, $dst: expr, $insc:ident) => {
+        match $ty {
+            Type21::Bool => {
+                $this.compiled.code.push(Insc::$insc { lhs: $lhs, rhs: $rhs, dst: $dst });
+                Ok(ExprResult::StackAddr(Type21::Bool, $dst))
+            },
+            _ => Err(format!("unsupported type for logic binop: {:?}", $ty))
         }
     }
 }
@@ -263,10 +318,105 @@ impl<CTX: IOContext> SyntaxVisitor for CodegenContext<CTX> {
             return Err("cannot perform binary operation on operands of different types".to_string())
         }
 
-        todo!()
+        if let (ExprResult::ConstEval(ty, lhs_value),
+                ExprResult::ConstEval(_, rhs_value)) = (lhs, rhs) {
+            match op {
+                BinaryOp::Add =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, ty, +),
+                BinaryOp::Sub =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, ty, -),
+                BinaryOp::Mul =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, ty, *),
+                BinaryOp::Div =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, ty, /),
+                BinaryOp::Mod => if let Type21::Int32 = ty {
+                    Ok(ExprResult::ConstEval(ty, unsafe { lhs_value.i % rhs_value.i }.into()))
+                } else {
+                    Err("cannot perform modulo on non-integer types".to_string())
+                },
+                BinaryOp::Eq => Ok(ExprResult::ConstEval(
+                    Type21::Bool,
+                    (lhs_value == rhs_value).into()
+                )),
+                BinaryOp::Ne => Ok(ExprResult::ConstEval(
+                    Type21::Bool,
+                    (lhs_value != rhs_value).into()
+                )),
+                BinaryOp::Lt =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, Type21::Bool, <),
+                BinaryOp::Le =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, Type21::Bool, <=),
+                BinaryOp::Gt =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, Type21::Bool, >),
+                BinaryOp::Ge =>
+                    impl_arithmetic_binop_constfold!(ty, lhs_value, rhs_value, Type21::Bool, >=),
+                BinaryOp::And =>
+                    impl_logic_binop_constfold!(ty, lhs_value, rhs_value, &&),
+                BinaryOp::Or =>
+                    impl_logic_binop_constfold!(ty, lhs_value, rhs_value, ||),
+            }
+        } else {
+            let ty = lhs.type21();
+            let lhs_addr = self.ensure_addr(lhs);
+            let rhs_addr = self.ensure_addr(rhs);
+            let new_addr = self.frame.allocate();
+
+            match op {
+                BinaryOp::Add => impl_arithmetic_binop!(
+                    self, ty, lhs_addr, rhs_addr, ty, new_addr, AddInt, AddFloat
+                ),
+                BinaryOp::Sub => impl_arithmetic_binop!(
+                    self, ty, lhs_addr, rhs_addr, ty, new_addr, SubInt, SubFloat
+                ),
+                BinaryOp::Mul => impl_arithmetic_binop!(
+                    self, ty, lhs_addr, rhs_addr, ty, new_addr, MulInt, MulFloat
+                ),
+                BinaryOp::Div => impl_arithmetic_binop!(
+                    self, ty, lhs_addr, rhs_addr, ty, new_addr, DivInt, DivFloat
+                ),
+                BinaryOp::Mod => if let Type21::Int32 = ty {
+                    self.compiled.code.push(Insc::ModInt {
+                        lhs: lhs_addr, rhs: rhs_addr, dst: new_addr
+                    });
+                    Ok(ExprResult::StackAddr(ty, new_addr))
+                } else {
+                    Err("cannot perform modulo on non-integer types".to_string())
+                },
+                BinaryOp::Eq => {
+                    self.compiled.code.push(Insc::Eq {
+                        lhs: lhs_addr, rhs: rhs_addr, dst: new_addr
+                    });
+                    Ok(ExprResult::StackAddr(Type21::Bool, new_addr))
+                },
+                BinaryOp::Ne => {
+                    self.compiled.code.push(Insc::Ne {
+                        lhs: lhs_addr, rhs: rhs_addr, dst: new_addr
+                    });
+                    Ok(ExprResult::StackAddr(Type21::Bool, new_addr))
+                },
+                BinaryOp::Lt => impl_arithmetic_binop!(
+                    self, ty, lhs_addr, rhs_addr, Type21::Bool, new_addr, LtInt, LtFloat
+                ),
+                BinaryOp::Le => impl_arithmetic_binop!(
+                    self, ty, lhs_addr, rhs_addr, Type21::Bool, new_addr, LeInt, LeFloat
+                ),
+                BinaryOp::Gt => impl_arithmetic_binop!(
+                    self, ty, rhs_addr, lhs_addr, Type21::Bool, new_addr, LtInt, LtFloat
+                ),
+                BinaryOp::Ge => impl_arithmetic_binop!(
+                    self, ty, rhs_addr, lhs_addr, Type21::Bool, new_addr, LeInt, LeFloat
+                ),
+                BinaryOp::And => impl_logic_binop!(self, ty, lhs_addr, rhs_addr, new_addr, And),
+                BinaryOp::Or => impl_logic_binop!(self, ty, lhs_addr, rhs_addr, new_addr, Or),
+            }
+        }
     }
 
-    fn visit_assign(&mut self, assign_op: &TokenData, names: &str, value: Self::ExprResult) -> Result<Self::ExprResult, Self::Error> {
+    fn visit_assign(
+        &mut self,
+        names: &str,
+        value: Self::ExprResult
+    ) -> Result<Self::ExprResult, Self::Error> {
         todo!()
     }
 

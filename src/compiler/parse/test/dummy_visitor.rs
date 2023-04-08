@@ -1,5 +1,4 @@
 use std::convert::Infallible;
-use crate::compiler::lex::TokenData;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
@@ -39,7 +38,6 @@ impl SyntaxVisitor for DummyVisitor {
 
     fn visit_assign(
         &mut self,
-        _assign_op: &TokenData,
         _names: &str,
         _value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error> {

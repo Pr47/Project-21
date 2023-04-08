@@ -29,15 +29,9 @@ pub enum TokenData {
     OpMul,
     OpDiv,
     OpMod,
-    OpAddAssign,
-    OpSubAssign,
-    OpMulAssign,
-    OpDivAssign,
-    OpModAssign,
     OpAnd,
     OpOr,
     OpNot,
-    OpXor,
     OpLt,
     OpLe,
     OpGt,
@@ -108,53 +102,23 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, SyntaxError> {
             'a'..='z' | 'A'..='Z' | '_' => lex_kwd_or_ident(&mut tokens, &mut idx, &mut input, line),
             '+' => {
                 idx += 1;
-                if input[idx] == '=' {
-                    idx += 1;
-                    tokens.push(Token::new(TokenData::OpAddAssign, line));
-                } else {
-                    tokens.push(Token::new(TokenData::OpAdd, line));
-                }
+                tokens.push(Token::new(TokenData::OpAdd, line));
             },
             '-' => {
                 idx += 1;
-                if input[idx] == '=' {
-                    idx += 1;
-                    tokens.push(Token::new(TokenData::OpSubAssign, line));
-                } else {
-                    tokens.push(Token::new(TokenData::OpSub, line));
-                }
+                tokens.push(Token::new(TokenData::OpSub, line));
             },
             '*' => {
                 idx += 1;
-                if input[idx] == '=' {
-                    idx += 1;
-                    tokens.push(Token::new(TokenData::OpMulAssign, line));
-                } else {
-                    tokens.push(Token::new(TokenData::OpMul, line));
-                }
+                tokens.push(Token::new(TokenData::OpMul, line));
             },
             '/' => {
                 idx += 1;
-                if input[idx] == '=' {
-                    idx += 1;
-                    tokens.push(Token::new(TokenData::OpDivAssign, line));
-                } else if (input[idx]) == '/' {
-                    idx += 1;
-                    while input[idx] != '\n' && input[idx] != '\0' {
-                        idx += 1;
-                    }
-                } else {
-                    tokens.push(Token::new(TokenData::OpDiv, line));
-                }
+                tokens.push(Token::new(TokenData::OpDiv, line));
             },
             '%' => {
                 idx += 1;
-                if input[idx] == '=' {
-                    idx += 1;
-                    tokens.push(Token::new(TokenData::OpModAssign, line));
-                } else {
-                    tokens.push(Token::new(TokenData::OpMod, line));
-                }
+                tokens.push(Token::new(TokenData::OpMod, line));
             },
             '&' => {
                 idx += 1;
@@ -178,10 +142,6 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, SyntaxError> {
                 } else {
                     tokens.push(Token::new(TokenData::OpNot, line));
                 }
-            },
-            '^' => {
-                idx += 1;
-                tokens.push(Token::new(TokenData::OpXor, line));
             },
             '<' => {
                 idx += 1;

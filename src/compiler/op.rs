@@ -31,7 +31,6 @@ pub enum BinaryOp {
     Ge,
     And,
     Or,
-    Xor
 }
 
 impl TryFrom<&TokenData> for BinaryOp {
@@ -52,7 +51,6 @@ impl TryFrom<&TokenData> for BinaryOp {
             TokenData::OpGe => BinaryOp::Ge,
             TokenData::OpAnd => BinaryOp::And,
             TokenData::OpOr => BinaryOp::Or,
-            TokenData::OpXor => BinaryOp::Xor,
             _ => {
                 return Err(())
             }
@@ -67,7 +65,7 @@ impl BinaryOp {
             BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => 2,
             BinaryOp::Eq | BinaryOp::Ne | BinaryOp::Lt | BinaryOp::Le | BinaryOp::Gt | BinaryOp::Ge => 3,
             BinaryOp::And => 4,
-            BinaryOp::Or | BinaryOp::Xor => 5
+            BinaryOp::Or => 5
         }
     }
 }

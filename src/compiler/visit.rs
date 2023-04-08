@@ -1,4 +1,3 @@
-use crate::compiler::lex::TokenData;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::io_ctx::Type21;
 
@@ -25,7 +24,6 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_assign(
         &mut self,
-        assign_op: &TokenData,
         names: &str,
         value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error>;
