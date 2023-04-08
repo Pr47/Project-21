@@ -1,4 +1,5 @@
 use xjbutil::either::Either;
+use crate::compiler::lex::TokenData;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::io_ctx::Type21;
 
@@ -8,6 +9,7 @@ pub trait SyntaxVisitor {
     type DeclResult;
     type Error;
 
+    fn visit_ident(&mut self, ident: &str) -> Self::ExprResult;
     fn visit_lit_int(&mut self, value: i32) -> Self::ExprResult;
     fn visit_lit_float(&mut self, value: f32) -> Self::ExprResult;
     fn visit_lit_bool(&mut self, value: bool) -> Self::ExprResult;
@@ -24,7 +26,8 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_assign(
         &mut self,
-        names: &[&str],
+        assign_op: &TokenData,
+        names: &str,
         value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error>;
     fn visit_assign2(

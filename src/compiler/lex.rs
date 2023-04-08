@@ -17,6 +17,8 @@ pub enum TokenData {
     KwdFor,
     KwdBreak,
     KwdContinue,
+    KwdTrue,
+    KwdFalse,
 
     // Operators
     OpAssign,
@@ -25,6 +27,11 @@ pub enum TokenData {
     OpMul,
     OpDiv,
     OpMod,
+    OpAddAssign,
+    OpSubAssign,
+    OpMulAssign,
+    OpDivAssign,
+    OpModAssign,
     OpAnd,
     OpOr,
     OpNot,
@@ -44,7 +51,10 @@ pub enum TokenData {
     SymLBrace,
     SymRBrace,
     SymLBracket,
-    SymRBracket
+    SymRBracket,
+
+    // End of Input
+    EOI
 }
 
 #[derive(Debug, Clone)]
