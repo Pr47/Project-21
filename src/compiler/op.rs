@@ -34,9 +34,11 @@ pub enum BinaryOp {
     Xor
 }
 
-impl From<&TokenData> for BinaryOp {
-    fn from(value: &TokenData) -> Self {
-        match value {
+impl TryFrom<&TokenData> for BinaryOp {
+    type Error = ();
+
+    fn try_from(value: &TokenData) -> Result<Self, ()> {
+        Ok(match value {
             TokenData::OpAdd => BinaryOp::Add,
             TokenData::OpSub => BinaryOp::Sub,
             TokenData::OpMul => BinaryOp::Mul,
@@ -51,8 +53,10 @@ impl From<&TokenData> for BinaryOp {
             TokenData::OpAnd => BinaryOp::And,
             TokenData::OpOr => BinaryOp::Or,
             TokenData::OpXor => BinaryOp::Xor,
-            _ => unreachable!()
-        }
+            _ => {
+                return Err(())
+            }
+        })
     }
 }
 

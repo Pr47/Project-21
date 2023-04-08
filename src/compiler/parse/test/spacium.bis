@@ -10,7 +10,7 @@ void main() {
   yield;
 
   int i;
-  for (i = 1; i <= 45; i++) {
+  for (i = 1; i <= 45; i += 1) {
     float value = -90.0 * interp(1.0, 45.0, float(i));
     g_arm_l0 = value;
     g_arm_l2 = value;
@@ -18,7 +18,7 @@ void main() {
     yield;
   }
 
-  for (i = 1; i <= 45; i++) {
+  for (i = 1; i <= 45; i += 1) {
     float value = 90.0 * interp(1.0, 45.0, float(i));
     g_arm_l3 = value;
     g_arm_r3 = -value;

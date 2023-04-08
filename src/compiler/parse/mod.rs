@@ -18,7 +18,7 @@ pub fn parse<SV>(
 {
     let mut cursor = 0;
     let mut decl_results = Vec::new();
-    while cursor < tokens.len() {
+    while cursor < tokens.len() && tokens[cursor].data != TokenData::EOI {
         let decl = parse_top_level_decl(sv, tokens, &mut cursor)?;
         decl_results.push(decl);
     }

@@ -1,3 +1,4 @@
+use smallvec::SmallVec;
 use crate::compiler::CompileError;
 use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::visit::SyntaxVisitor;
@@ -20,6 +21,7 @@ pub fn parse_stmt<SV>(
         | TokenData::KwdFloat => parse_decl_stmt(sv, tokens, cursor),
         TokenData::KwdIf => parse_if_stmt(sv, tokens, cursor),
         TokenData::KwdWhile => parse_while_stmt(sv, tokens, cursor),
+        TokenData::KwdFor => parse_for_stmt(sv, tokens, cursor),
         TokenData::KwdReturn => parse_return_stmt(sv, tokens, cursor),
         TokenData::KwdBreak => parse_break_stmt(sv, tokens, cursor),
         TokenData::KwdContinue => parse_continue_stmt(sv, tokens, cursor),
@@ -107,6 +109,38 @@ pub fn parse_while_stmt<SV>(
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
 }
 
+pub fn parse_for_stmt<SV>(
+    sv: &mut SV,
+    tokens: &[Token],
+    cursor: &mut usize
+)-> Result<SV::StmtResult, CompileError<SV::Error>>
+    where SV: SyntaxVisitor
+{
+    *cursor += 1;
+    expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
+    let init = if let TokenData::SymSemi = tokens[*cursor].data {
+        None
+    } else {
+        Some(parse_expr(sv, tokens, cursor)?)
+    };
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
+    let cond = if let TokenData::SymSemi = tokens[*cursor].data {
+        None
+    } else {
+        Some(parse_expr(sv, tokens, cursor)?)
+    };
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
+    let step = if let TokenData::SymRParen = tokens[*cursor].data {
+        None
+    } else {
+        Some(parse_expr(sv, tokens, cursor)?)
+    };
+    expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
+    let body = parse_stmt(sv, tokens, cursor)?;
+    sv.visit_for_stmt(init, cond, step, body)
+        .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
+}
+
 pub fn parse_return_stmt<SV>(
     sv: &mut SV,
     tokens: &[Token],
@@ -159,12 +193,12 @@ pub fn parse_block_stmt<SV>(
     where SV: SyntaxVisitor
 {
     *cursor += 1;
-    let mut stmts = Vec::new();
-    while let TokenData::SymRBrace = tokens[*cursor].data {
+    let mut stmts: SmallVec<[SV::StmtResult; 2]> = SmallVec::new();
+    while tokens[*cursor].data != TokenData::SymRBrace {
         stmts.push(parse_stmt(sv, tokens, cursor)?);
     }
     expect_n_consume(tokens, TokenData::SymRBrace, cursor)?;
-    sv.visit_block_stmt(stmts)
+    sv.visit_block_stmt(&stmts)
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
 }
 

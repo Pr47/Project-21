@@ -1,19 +1,26 @@
+mod dummy_visitor;
+
 use crate::compiler::lex::tokenize;
+use crate::compiler::parse::parse;
+use crate::compiler::parse::test::dummy_visitor::DummyVisitor;
 
 #[test]
-fn test_lex_simple() {
+fn test_simple() {
     let tokens = tokenize("void main() {}").unwrap();
-    dbg!(tokens);
+    let mut sv = DummyVisitor();
+    parse(&mut sv, &tokens).unwrap();
 }
 
 #[test]
-fn test_lex_interp() {
+fn test_interp() {
     let tokens = tokenize(include_str!("interp.bis")).unwrap();
-    dbg!(tokens);
+    let mut sv = DummyVisitor();
+    parse(&mut sv, &tokens).unwrap();
 }
 
 #[test]
-fn test_lex_spacium() {
+fn test_spacium() {
     let tokens = tokenize(include_str!("spacium.bis")).unwrap();
-    dbg!(tokens);
+    let mut sv = DummyVisitor();
+    parse(&mut sv, &tokens).unwrap();
 }

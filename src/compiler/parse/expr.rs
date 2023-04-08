@@ -110,7 +110,9 @@ fn parse_bin_expr_impl<SV>(
 
     loop {
         let current_token = &tokens[*cursor];
-        let op: BinaryOp = (&current_token.data).into();
+        let Ok(op): Result<BinaryOp, ()> = (&current_token.data).try_into() else {
+            return Ok(lhs);
+        };
         let precedence = op.precedence();
 
         if precedence < min_precedence {
@@ -158,7 +160,11 @@ pub fn parse_atom_expr<'a, SV>(
     match &current_token.data {
         TokenData::Ident(name) => {
             *cursor += 1;
-            Ok(sv.visit_ident(name))
+            if let TokenData::SymLParen = &tokens[*cursor].data {
+                parse_func_call(sv, tokens, cursor, name)
+            } else {
+                Ok(sv.visit_ident(name))
+            }
         },
         TokenData::LitInt(value) => {
             *cursor += 1;
@@ -177,7 +183,7 @@ pub fn parse_atom_expr<'a, SV>(
             *cursor += 1;
             expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
             let expr = parse_unary_expr(sv, tokens, cursor)?;
-            expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
+            expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
             sv.visit_type_cast(Type21::from_token(&current_token), expr)
                 .map_err(|e| CompileError::sv_error(e, current_token.line))
         },
@@ -189,6 +195,45 @@ pub fn parse_atom_expr<'a, SV>(
         },
         _ => Err(CompileError::syntax_error(current_token.line))
     }
+}
+
+fn parse_func_call<'a, SV>(
+    sv: &mut SV,
+    tokens: &'a [Token],
+    cursor: &mut usize,
+    name: &str
+) -> Result<SV::ExprResult, CompileError<SV::Error>>
+    where SV: SyntaxVisitor
+{
+    let line = tokens[*cursor].line;
+    *cursor += 1;
+
+    let mut args: SmallVec<[SV::ExprResult; 4]> = SmallVec::new();
+    loop {
+        let current_token = &tokens[*cursor];
+        match &current_token.data {
+            TokenData::SymRParen => {
+                *cursor += 1;
+                break;
+            },
+            _ => {
+                let expr = parse_expr(sv, tokens, cursor)?;
+                args.push(expr);
+            }
+        }
+        // comma
+        if let TokenData::SymComma = &tokens[*cursor].data {
+            *cursor += 1;
+        } else if let TokenData::SymRParen = &tokens[*cursor].data {
+            *cursor += 1;
+            break;
+        } else {
+            return Err(CompileError::syntax_error(current_token.line));
+        }
+    }
+
+    sv.visit_call(name, &args)
+        .map_err(|e| CompileError::sv_error(e, line))
 }
 
 fn parse_ident_list<'a>(

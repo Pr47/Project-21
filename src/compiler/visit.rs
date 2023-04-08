@@ -1,4 +1,3 @@
-use xjbutil::either::Either;
 use crate::compiler::lex::TokenData;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::io_ctx::Type21;
@@ -43,7 +42,7 @@ pub trait SyntaxVisitor {
     fn visit_call(
         &mut self,
         name: &str,
-        args: Vec<Self::ExprResult>
+        args: &[Self::ExprResult]
     ) -> Result<Self::ExprResult, Self::Error>;
 
     fn visit_expr_stmt(
@@ -67,9 +66,9 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_for_stmt(
         &mut self,
-        init: Either<Self::ExprResult, Self::DeclResult>,
-        cond: Self::ExprResult,
-        step: Self::ExprResult,
+        init: Option<Self::ExprResult>,
+        cond: Option<Self::ExprResult>,
+        step: Option<Self::ExprResult>,
         body: Self::StmtResult
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_break_stmt(&mut self) -> Result<Self::StmtResult, Self::Error>;
@@ -80,7 +79,7 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_block_stmt(
         &mut self,
-        stmts: Vec<Self::StmtResult>
+        stmts: &[Self::StmtResult]
     ) -> Result<Self::StmtResult, Self::Error>;
 
     fn visit_var_decl(

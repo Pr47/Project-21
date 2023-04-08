@@ -14,11 +14,15 @@ pub struct CompileError<SVError> {
 }
 
 impl<SVError> CompileError<SVError> {
+    #[cfg_attr(test, allow(unused_variables, unreachable_code))]
     pub fn sv_error(err: SVError, line: usize) -> Self {
+        #[cfg(test)] panic!("unexpected semantic error, line = {}", line);
         Self { err: Either::Left(err), line }
     }
 
+    #[cfg_attr(test, allow(unused_variables, unreachable_code))]
     pub fn syntax_error(line: usize) -> Self {
+        #[cfg(test)] panic!("unexpected syntax error, line = {}", line);
         Self { err: Either::Right(()), line }
     }
 }
@@ -29,7 +33,9 @@ pub struct SyntaxError {
 }
 
 impl SyntaxError {
+    #[cfg_attr(test, allow(unused_variables, unreachable_code))]
     pub fn new(line: usize) -> Self {
+        #[cfg(test)] panic!("unexpected syntax error, line = {}", line);
         Self { line }
     }
 }

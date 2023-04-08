@@ -5,7 +5,6 @@ use crate::compiler::parse::expect_n_consume;
 use crate::compiler::parse::expr::parse_expr;
 use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
-use super::expect_token;
 use super::stmt::parse_block_stmt;
 use super::ty::parse_types;
 
@@ -42,7 +41,7 @@ pub fn parse_func_decl<SV>(
     };
 
     *cursor += 1;
-    expect_token(tokens, TokenData::SymLParen, cursor)?;
+    expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
 
     let mut params: SmallVec<[(Type21, &str); 2]> = SmallVec::new();
     loop {
