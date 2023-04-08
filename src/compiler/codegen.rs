@@ -418,9 +418,45 @@ impl<CTX: IOContext> SyntaxVisitor for CodegenContext<CTX> {
         value: Self::ExprResult
     ) -> Result<Self::ExprResult, Self::Error> {
         let ty = value.type21();
-        let value_addr = self.ensure_addr(value);
 
-        todo!()
+        if let Some((addr, var_type)) = self.frame.get_var(name) {
+            if var_type != ty {
+                return Err(format!(
+                    "cannot assign value of type '{}' to variable '{}' of type '{}'",
+                    ty,
+                    name,
+                    var_type
+                ));
+            }
+            match value {
+                ExprResult::ConstEval(_, value) => {
+                    self.compiled.code.push(Insc::Const { value, dst: addr });
+                }
+                ExprResult::StackAddr(_, value_addr) => {
+                    self.compiled.code.push(Insc::Dup { src: value_addr, dst: addr });
+                }
+            }
+            Ok(ExprResult::StackAddr(ty, addr))
+        } else if let Some((ioctx_var_type, offset)) = self.metadata.get(name) {
+            if *ioctx_var_type != ty {
+                return Err(format!(
+                    "cannot assign value of type '{}' to ioctx variable '{}' of type '{}'",
+                    ty,
+                    name,
+                    ioctx_var_type
+                ));
+            }
+
+            let offset = *offset;
+            let value_addr = self.ensure_addr(value);
+            self.compiled.code.push(Insc::IOSetValue {
+                offset,
+                src: value_addr,
+            });
+            Ok(ExprResult::StackAddr(ty, value_addr))
+        } else {
+            return Err(format!("variable '{}' is not declared", name));
+        }
     }
 
     fn visit_assign2(&mut self, names: &[&str], value: Self::ExprResult) -> Result<Self::ExprResult, Self::Error> {
@@ -435,9 +471,7 @@ impl<CTX: IOContext> SyntaxVisitor for CodegenContext<CTX> {
         todo!()
     }
 
-    fn visit_expr_stmt(&mut self, expr: Self::ExprResult) -> Self::StmtResult {
-        todo!()
-    }
+    fn visit_expr_stmt(&mut self, _expr: Self::ExprResult) -> Self::StmtResult {}
 
     fn visit_decl_stmt(&mut self, decl: Self::DeclResult) -> Result<Self::StmtResult, Self::Error> {
         todo!()

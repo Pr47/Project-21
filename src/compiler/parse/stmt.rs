@@ -18,7 +18,8 @@ pub fn parse_stmt<SV>(
     match cur_token.data {
         TokenData::KwdVar
         | TokenData::KwdInt
-        | TokenData::KwdFloat => parse_decl_stmt(sv, tokens, cursor),
+        | TokenData::KwdFloat
+        | TokenData::KwdBool => parse_decl_stmt(sv, tokens, cursor),
         TokenData::KwdIf => parse_if_stmt(sv, tokens, cursor),
         TokenData::KwdWhile => parse_while_stmt(sv, tokens, cursor),
         TokenData::KwdFor => parse_for_stmt(sv, tokens, cursor),

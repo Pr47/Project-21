@@ -10,6 +10,7 @@ pub enum TokenData {
     KwdConst,
     KwdInt,
     KwdFloat,
+    KwdBool,
     KwdVar,
     KwdVoid,
     KwdReturn,

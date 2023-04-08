@@ -75,6 +75,10 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
             match unsafe { compiled.code.get_unchecked(insc_ptr) } {
                 Insc::Const { value, dst } =>
                     current_frame.set_value(&mut self.stack, *dst, *value),
+                Insc::Dup { src, dst } => {
+                    let value = current_frame.get_value(&mut self.stack, *src);
+                    current_frame.set_value(&mut self.stack, *dst, value);
+                },
                 Insc::AddInt { lhs, rhs, dst } =>
                     impl_binop!(i, &mut self.stack, current_frame, lhs, rhs, dst, +),
                 Insc::AddFloat { lhs, rhs, dst } =>

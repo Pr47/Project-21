@@ -5,6 +5,7 @@ use crate::value::RtValue;
 #[derive(Debug, Clone)]
 pub enum Insc {
     Const { value: RtValue, dst: usize },
+    Dup { src: usize, dst: usize },
 
     AddInt { lhs: usize, rhs: usize, dst: usize },
     AddFloat { lhs: usize, rhs: usize, dst: usize },
