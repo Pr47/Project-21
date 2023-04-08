@@ -34,7 +34,7 @@ pub fn parse_func_decl<SV>(
 ) -> Result<SV::DeclResult, CompileError<SV::Error>>
     where SV: SyntaxVisitor
 {
-    let ret_types = parse_types(sv, tokens, cursor)?;
+    let ret_types = parse_types(tokens, cursor)?;
 
     let cur_token = &tokens[*cursor];
     let TokenData::Ident(name) = &cur_token.data else {
@@ -42,7 +42,7 @@ pub fn parse_func_decl<SV>(
     };
 
     *cursor += 1;
-    expect_token(sv, tokens, TokenData::SymLParen, cursor)?;
+    expect_token(tokens, TokenData::SymLParen, cursor)?;
 
     let mut params: SmallVec<[(Type21, &str); 2]> = SmallVec::new();
     loop {
@@ -102,10 +102,10 @@ pub fn parse_const_decl<SV>(
     };
 
     *cursor += 1;
-    expect_n_consume(sv, tokens, TokenData::OpAssign, cursor)?;
+    expect_n_consume(tokens, TokenData::OpAssign, cursor)?;
 
     let expr = parse_expr(sv, tokens, cursor)?;
-    expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
 
     sv.visit_const_decl(name, expr)
         .map_err(|e| CompileError::sv_error(e, cur_token.line))

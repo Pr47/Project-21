@@ -1,3 +1,5 @@
+use crate::compiler::SyntaxError;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenData {
     Ident(String),
@@ -79,4 +81,8 @@ impl Token {
     pub fn ident(value: String, line: usize) -> Self {
         Self::new(TokenData::Ident(value), line)
     }
+}
+
+pub fn tokenize(input: &str) -> Result<Vec<Token>, SyntaxError> {
+    todo!()
 }

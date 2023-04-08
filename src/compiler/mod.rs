@@ -5,7 +5,6 @@ pub mod visit;
 pub mod op;
 
 use std::fmt::Debug;
-
 use xjbutil::either::Either;
 
 #[derive(Debug, Clone)]
@@ -21,5 +20,22 @@ impl<SVError> CompileError<SVError> {
 
     pub fn syntax_error(line: usize) -> Self {
         Self { err: Either::Right(()), line }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SyntaxError {
+    pub line: usize
+}
+
+impl SyntaxError {
+    pub fn new(line: usize) -> Self {
+        Self { line }
+    }
+}
+
+impl<SVError> From<SyntaxError> for CompileError<SVError> {
+    fn from(value: SyntaxError) -> Self {
+        CompileError::syntax_error(value.line)
     }
 }

@@ -1,8 +1,7 @@
 use smallvec::{SmallVec, smallvec};
 use crate::io_ctx::Type21;
-use crate::compiler::CompileError;
+use crate::compiler::SyntaxError;
 use crate::compiler::lex::{Token, TokenData};
-use crate::compiler::visit::SyntaxVisitor;
 
 impl Type21 {
     pub fn from_token(token: &Token) -> Self {
@@ -14,13 +13,10 @@ impl Type21 {
     }
 }
 
-pub fn parse_types<SV>(
-    sv: &mut SV,
+pub fn parse_types(
     tokens: &[Token],
     cursor: &mut usize
-) -> Result<SmallVec<[Type21; 2]>, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
+) -> Result<SmallVec<[Type21; 2]>, SyntaxError> {
     let cur_token = &tokens[*cursor];
     match cur_token.data {
         TokenData::KwdInt | TokenData::KwdFloat => {
@@ -32,19 +28,16 @@ pub fn parse_types<SV>(
             Ok(smallvec![])
         },
         TokenData::SymLBracket => {
-            parse_type_list(sv, tokens, cursor)
+            Ok(parse_type_list(tokens, cursor)?)
         },
-        _ => Err(CompileError::syntax_error(cur_token.line))
+        _ => Err(SyntaxError::new(cur_token.line))
     }
 }
 
-pub fn parse_type_list<SV>(
-    _sv: &mut SV,
+pub fn parse_type_list(
     tokens: &[Token],
     cursor: &mut usize
-) -> Result<SmallVec<[Type21; 2]>, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
+) -> Result<SmallVec<[Type21; 2]>, SyntaxError> {
     assert_eq!(tokens[*cursor].data, TokenData::SymLBracket);
     *cursor += 1;
 
@@ -64,7 +57,7 @@ pub fn parse_type_list<SV>(
                 *cursor += 1;
                 break;
             },
-            _ => return Err(CompileError::syntax_error(cur_token.line))
+            _ => return Err(SyntaxError::new(cur_token.line))
         }
     }
 

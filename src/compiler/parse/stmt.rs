@@ -53,7 +53,7 @@ pub fn parse_decl_stmt<SV>(
     if let TokenData::OpAssign = &tokens[*cursor].data {
         *cursor += 1;
         let init = parse_expr(sv, tokens, cursor)?;
-        expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+        expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
         let decl = sv.visit_var_decl(ty, name, Some(init))
             .map_err(|e| CompileError::sv_error(e, cur_token.line))?;
         sv.visit_decl_stmt(decl)
@@ -77,9 +77,9 @@ pub fn parse_if_stmt<SV>(
     where SV: SyntaxVisitor
 {
     *cursor += 1;
-    expect_n_consume(sv, tokens, TokenData::SymLParen, cursor)?;
+    expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
     let cond = parse_expr(sv, tokens, cursor)?;
-    expect_n_consume(sv, tokens, TokenData::SymRParen, cursor)?;
+    expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
     let then = parse_stmt(sv, tokens, cursor)?;
     let else_ = if let TokenData::KwdElse = tokens[*cursor].data {
         *cursor += 1;
@@ -99,9 +99,9 @@ pub fn parse_while_stmt<SV>(
     where SV: SyntaxVisitor
 {
     *cursor += 1;
-    expect_n_consume(sv, tokens, TokenData::SymLParen, cursor)?;
+    expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
     let cond = parse_expr(sv, tokens, cursor)?;
-    expect_n_consume(sv, tokens, TokenData::SymRParen, cursor)?;
+    expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
     let body = parse_stmt(sv, tokens, cursor)?;
     sv.visit_while_stmt(cond, body)
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
@@ -120,7 +120,7 @@ pub fn parse_return_stmt<SV>(
     } else {
         Some(parse_expr(sv, tokens, cursor)?)
     };
-    expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
     sv.visit_return_stmt(ret)
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
 }
@@ -133,7 +133,7 @@ pub fn parse_break_stmt<SV>(
     where SV: SyntaxVisitor
 {
     *cursor += 1;
-    expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
     sv.visit_break_stmt()
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
 }
@@ -146,7 +146,7 @@ pub fn parse_continue_stmt<SV>(
     where SV: SyntaxVisitor
 {
     *cursor += 1;
-    expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
     sv.visit_continue_stmt()
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
 }
@@ -163,7 +163,7 @@ pub fn parse_block_stmt<SV>(
     while let TokenData::SymRBrace = tokens[*cursor].data {
         stmts.push(parse_stmt(sv, tokens, cursor)?);
     }
-    expect_n_consume(sv, tokens, TokenData::SymRBrace, cursor)?;
+    expect_n_consume(tokens, TokenData::SymRBrace, cursor)?;
     sv.visit_block_stmt(stmts)
         .map_err(|e| CompileError::sv_error(e, tokens[*cursor].line))
 }
@@ -176,6 +176,6 @@ pub fn parse_expr_stmt<SV>(
     where SV: SyntaxVisitor
 {
     let expr = parse_expr(sv, tokens, cursor)?;
-    expect_n_consume(sv, tokens, TokenData::SymSemi, cursor)?;
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
     Ok(sv.visit_expr_stmt(expr))
 }

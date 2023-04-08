@@ -1,5 +1,5 @@
 use smallvec::SmallVec;
-use crate::compiler::CompileError;
+use crate::compiler::{CompileError, SyntaxError};
 use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::op::BinaryOp;
 use crate::compiler::parse::expect_n_consume;
@@ -57,9 +57,9 @@ pub fn parse_multi_assign_expr<SV>(
 {
     let line = tokens[*cursor].line;
 
-    let ident_list = parse_ident_list(sv, tokens, cursor)?;
+    let ident_list = parse_ident_list(tokens, cursor)?;
 
-    expect_n_consume(sv, tokens, TokenData::OpAssign, cursor)?;
+    expect_n_consume(tokens, TokenData::OpAssign, cursor)?;
 
     let expr = parse_bin_expr(sv, tokens, cursor)?;
 
@@ -175,29 +175,26 @@ pub fn parse_atom_expr<'a, SV>(
         },
         TokenData::KwdInt | TokenData::KwdFloat => {
             *cursor += 1;
-            expect_n_consume(sv, tokens, TokenData::SymLParen, cursor)?;
+            expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
             let expr = parse_unary_expr(sv, tokens, cursor)?;
-            expect_n_consume(sv, tokens, TokenData::SymLParen, cursor)?;
+            expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
             sv.visit_type_cast(Type21::from_token(&current_token), expr)
                 .map_err(|e| CompileError::sv_error(e, current_token.line))
         },
         TokenData::SymLParen => {
             *cursor += 1;
             let expr = parse_expr(sv, tokens, cursor)?;
-            expect_n_consume(sv, tokens, TokenData::SymRParen, cursor)?;
+            expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
             Ok(expr)
         },
         _ => Err(CompileError::syntax_error(current_token.line))
     }
 }
 
-fn parse_ident_list<'a, SV>(
-    _sv: &mut SV,
+fn parse_ident_list<'a>(
     tokens: &'a [Token],
     cursor: &mut usize
-) -> Result<SmallVec<[&'a str; 2]>, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
+) -> Result<SmallVec<[&'a str; 2]>, SyntaxError> {
     *cursor += 1;
     let mut idents = SmallVec::new();
     loop {
@@ -211,7 +208,7 @@ fn parse_ident_list<'a, SV>(
                 *cursor += 1;
                 break;
             },
-            _ => return Err(CompileError::syntax_error(current_token.line))
+            _ => return Err(SyntaxError::new(current_token.line))
         }
     }
     *cursor += 1;

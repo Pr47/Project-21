@@ -4,6 +4,7 @@ pub mod stmt;
 pub mod ty;
 
 use crate::compiler::lex::Token;
+use crate::compiler::SyntaxError;
 use crate::compiler::visit::SyntaxVisitor;
 use super::CompileError;
 use super::lex::TokenData;
@@ -24,31 +25,25 @@ pub fn parse<SV>(
     Ok(decl_results)
 }
 
-pub fn expect_token<SV>(
-    _sv: &mut SV,
+pub fn expect_token(
     tokens: &[Token],
     expected: TokenData,
     cursor: &mut usize
-) -> Result<(), CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
+) -> Result<(), SyntaxError> {
     let cur_token = &tokens[*cursor];
     if cur_token.data == expected {
         Ok(())
     } else {
-        Err(CompileError::syntax_error(cur_token.line))
+        Err(SyntaxError::new(cur_token.line))
     }
 }
 
-pub fn expect_n_consume<SV>(
-    sv: &mut SV,
+pub fn expect_n_consume(
     tokens: &[Token],
     expected: TokenData,
     cursor: &mut usize
-) -> Result<(), CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
-    expect_token(sv, tokens, expected, cursor)?;
+) -> Result<(), SyntaxError> {
+    expect_token(tokens, expected, cursor)?;
     *cursor += 1;
     Ok(())
 }
