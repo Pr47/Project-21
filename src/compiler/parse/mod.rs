@@ -47,3 +47,5 @@ pub fn expect_n_consume(
     *cursor += 1;
     Ok(())
 }
+
+#[cfg(test)] mod test;

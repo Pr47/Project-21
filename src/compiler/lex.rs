@@ -94,6 +94,11 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, SyntaxError> {
         let current_char = input[idx];
         match current_char {
             '\0' => break,
+            '#' => {
+                while input[idx] != '\n' && input[idx] != '\0' {
+                    idx += 1;
+                }
+            },
             ' ' | '\t' | '\r' => idx += 1,
             '\n' => {
                 idx += 1;
@@ -133,6 +138,11 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, SyntaxError> {
                 if input[idx] == '=' {
                     idx += 1;
                     tokens.push(Token::new(TokenData::OpDivAssign, line));
+                } else if (input[idx]) == '/' {
+                    idx += 1;
+                    while input[idx] != '\n' && input[idx] != '\0' {
+                        idx += 1;
+                    }
                 } else {
                     tokens.push(Token::new(TokenData::OpDiv, line));
                 }
