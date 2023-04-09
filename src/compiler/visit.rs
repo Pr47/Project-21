@@ -43,26 +43,25 @@ pub trait SyntaxVisitor {
         args: &[Self::ExprResult]
     ) -> Result<Self::ExprResult, Self::Error>;
 
-    fn visit_expr_stmt(
-        &mut self,
-        expr: Self::ExprResult
-    ) -> Self::StmtResult;
-    fn visit_decl_stmt(
-        &mut self,
-        decl: Self::DeclResult
-    ) -> Result<Self::StmtResult, Self::Error>;
+    fn visit_expr_stmt(&mut self) -> Self::StmtResult;
+    fn fin_expr_stmt(&mut self, expr: Self::ExprResult) -> Result<Self::StmtResult, Self::Error>;
+    fn visit_decl_stmt(&mut self) -> Result<Self::StmtResult, Self::Error>;
+    fn fin_decl_stmt(&mut self, decl: Self::DeclResult) -> Result<Self::StmtResult, Self::Error>;
     fn visit_if_stmt(
         &mut self,
         cond: Self::ExprResult
     ) -> Result<Self::StmtResult, Self::Error>;
-    fn finalize_if_stmt(
+    fn fin_if_stmt(
         &mut self,
         if_clause: Self::StmtResult,
         else_clause: Option<Self::StmtResult>
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_while_stmt(
         &mut self,
-        cond: Self::ExprResult,
+        cond: Self::ExprResult
+    ) -> Result<Self::StmtResult, Self::Error>;
+    fn fin_while_stmt(
+        &mut self,
         body: Self::StmtResult
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_for_stmt(
