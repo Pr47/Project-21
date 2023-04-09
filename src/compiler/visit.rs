@@ -53,9 +53,12 @@ pub trait SyntaxVisitor {
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_if_stmt(
         &mut self,
-        cond: Self::ExprResult,
-        then: Self::StmtResult,
-        otherwise: Option<Self::StmtResult>
+        cond: Self::ExprResult
+    ) -> Result<Self::StmtResult, Self::Error>;
+    fn finalize_if_stmt(
+        &mut self,
+        if_clause: Self::StmtResult,
+        else_clause: Option<Self::StmtResult>
     ) -> Result<Self::StmtResult, Self::Error>;
     fn visit_while_stmt(
         &mut self,

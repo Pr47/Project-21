@@ -48,9 +48,11 @@ pub fn parse_multi_assign_expr<SV>(
     let ident_list = parse_ident_list(tokens, cursor)?;
 
     expect_n_consume(tokens, TokenData::OpAssign, cursor)?;
+    let TokenData::Ident(name) = &tokens[*cursor].data else {
+        return Err(CompileError::syntax_error(tokens[*cursor].line));
+    };
 
-    let expr = parse_bin_expr(sv, tokens, cursor)?;
-
+    let expr = parse_func_call(sv, tokens, cursor, name)?;
     sv.visit_assign2(&ident_list, expr)
         .map_err(|e| CompileError::sv_error(e, line))
 }
