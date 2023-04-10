@@ -22,7 +22,20 @@ pub struct FuncDecl {
 }
 
 #[derive(Debug, Clone)]
+pub enum Stmt {
+    LocalDeclStmt(LocalDecl),
+    ExprStmt(Expr),
+    IfStmt(IfStmt),
+    BlockStmt(BlockStmt),
+    WhileStmt(WhileStmt),
+    ForStmt(ForStmt),
+    ReturnStmt(Option<Expr>),
+    BreakStmt(usize),
+    ContinueStmt(usize),
+    YieldStmt(usize)
+}
+
+#[derive(Debug, Clone)]
 pub struct BlockStmt {
     stmts: Vec<Stmt>
 }
-
