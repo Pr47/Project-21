@@ -20,6 +20,7 @@ pub enum TokenData {
     KwdFor,
     KwdBreak,
     KwdContinue,
+    KwdYield,
     KwdTrue,
     KwdFalse,
 
@@ -277,6 +278,7 @@ pub fn lex_kwd_or_ident(
         "for" => tokens.push(Token::new(TokenData::KwdFor, line)),
         "break" => tokens.push(Token::new(TokenData::KwdBreak, line)),
         "continue" => tokens.push(Token::new(TokenData::KwdContinue, line)),
+        "yield" => tokens.push(Token::new(TokenData::KwdYield, line)),
         "true" => tokens.push(Token::new(TokenData::KwdTrue, line)),
         "false" => tokens.push(Token::new(TokenData::KwdFalse, line)),
         _ => tokens.push(Token::ident(value, line))
