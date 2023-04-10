@@ -15,7 +15,7 @@ function-declaration ::=
 function-declarator ::=
   function-type IDENT '(' parameter-list ')'
 
-function-type ::= TYPE | type-list
+function-type ::= TYPE | VOID | type-list
 
 type-list ::= '[' (TYPE ?',')* ']'
 
@@ -41,6 +41,7 @@ statement ::=
   | return-statement
   | break-statement
   | continue-statement
+  | yield-statement
 
 local-declaration ::=
   TYPE IDENT ';'
@@ -69,6 +70,8 @@ expression-list ::=
 break-statement ::= BREAK ';'
 
 continue-statement ::= CONTINUE ';'
+
+yield-statement ::= 'YIELD' ';'
 
 expression ::=
   assignment-expression
@@ -125,3 +128,5 @@ argument-list ::=
   | argument-list ','
   | argument-list ',' argument
   | EMPTY
+
+argument ::= expression
