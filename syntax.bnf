@@ -1,0 +1,127 @@
+// 这不是非常正规的语法定义，如果要将其用于自动工具可能需要一些修改
+
+program ::= attribute* top-level-declaration*
+
+attribute ::= '#' ARBITRARY '\n'
+
+top-level-declaration ::=
+  function-declaration
+  | const-declaration
+
+function-declaration ::=
+  function-declarator function-body
+  | function-declarator ';'
+
+function-declarator ::=
+  function-type IDENT '(' parameter-list ')'
+
+function-type ::= TYPE | type-list
+
+type-list ::= '[' (TYPE ?',')* ']'
+
+parameter-list ::=
+  parameter
+  | parameter-list ','
+  | parameter-list ',' parameter
+  | EMPTY
+
+parameter ::= TYPE IDENT
+
+function-body ::= statement-block
+
+const-declaration ::= CONST IDENT '=' expr ';'
+
+statement ::=
+  local-declaration
+  | expression-statement
+  | statement-block
+  | if-statement
+  | while-statement
+  | for-statement
+  | return-statement
+  | break-statement
+  | continue-statement
+
+local-declaration ::=
+  TYPE IDENT ';'
+  | TYPE IDENT '=' expr ';'
+  | VAR IDENT '=' expr ';'
+
+expression-statement ::= expression ';'
+
+statement-block ::= '{' statement* '}'
+
+if-statement ::= IF '(' expression ')' statement ELSE statement
+
+while-statement ::= WHILE '(' expression ')' statement
+
+for-statement ::=
+  FOR '(' ?expression ';' ?expression ';' ?expression ')' statement
+
+return-statement ::=
+  RETURN ';'
+  | RETURN expression ';'
+  | RETURN expression-list ';'
+
+expression-list ::=
+  '[' (expression ?',')+ ']'
+
+break-statement ::= BREAK ';'
+
+continue-statement ::= CONTINUE ';'
+
+expression ::=
+  assignment-expression
+  | multi-assignment-expression
+  | binary-expression
+
+assignment-expression ::= IDENT '=' expression
+
+multi-assignment-expression ::= ident-list '=' expression
+
+ident-list ::=
+  '[' (IDENT ?',')+ ']'
+
+binary-expression ::=
+  binary-expression AND relational-expression
+  | binary-expression OR relational-expression
+  | relational-expression
+
+relational-expression ::=
+  relational-expression '<' additive-expression
+  | relational-expression '>' additive-expression
+  | relational-expression '<=' additive-expression
+  | relational-expression '>=' additive-expression
+  | relational-expression '==' additive-expression
+  | relational-expression '!=' additive-expression
+  | additive-expression
+
+additive-expression ::=
+  additive-expression '+' multiplicative-expression
+  | additive-expression '-' multiplicative-expression
+  | multiplicative-expression
+
+multiplicative-expression ::=
+  multiplicative-expression '*' unary-expression
+  | multiplicative-expression '/' unary-expression
+  | unary-expression
+
+unary-expression ::=
+  '-' unary-expression
+  | '!' unary-expression
+  | atomic-expression
+
+atomic-expression ::=
+  IDENT
+  | NUMBER
+  | STRING
+  | '(' expression ')'
+  | function-call
+
+function-call ::= IDENT '(' argument-list ')'
+
+argument-list ::=
+  argument
+  | argument-list ','
+  | argument-list ',' argument
+  | EMPTY
