@@ -1,34 +1,35 @@
 use smallvec::SmallVec;
+use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::io_ctx::Type21;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Program {
-    const_decl: Vec<ConstDecl>,
-    func_decl: Vec<FuncDecl>
+    pub const_decl: Vec<ConstDecl>,
+    pub func_decl: Vec<FuncDecl>
 }
 
 #[derive(Debug, Clone)]
 pub struct ConstDecl {
-    name: String,
-    value: Expr
+    pub name: String,
+    pub value: Expr
 }
 
 #[derive(Debug, Clone)]
 pub struct FuncDecl {
-    name: String,
-    ty: SmallVec<[Type21; 2]>,
-    params: SmallVec<[(Type21, String); 2]>,
-    body: Option<BlockStmt>
+    pub name: String,
+    pub ty: SmallVec<[Type21; 2]>,
+    pub params: SmallVec<[(Type21, String); 2]>,
+    pub body: Option<Box<BlockStmt>>
 }
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
-    LocalDeclStmt(LocalDecl),
+    DeclStmt(Box<VarDecl>),
     ExprStmt(Expr),
-    IfStmt(IfStmt),
-    BlockStmt(BlockStmt),
-    WhileStmt(WhileStmt),
-    ForStmt(ForStmt),
+    IfStmt(Box<IfStmt>),
+    BlockStmt(Box<BlockStmt>),
+    WhileStmt(Box<WhileStmt>),
+    ForStmt(Box<ForStmt>),
     ReturnStmt(Option<Expr>),
     BreakStmt(usize),
     ContinueStmt(usize),
@@ -37,102 +38,92 @@ pub enum Stmt {
 
 #[derive(Debug, Clone)]
 pub struct BlockStmt {
-    stmts: Vec<Stmt>
+    pub stmts: SmallVec<[Stmt; 4]>
 }
 
 #[derive(Debug, Clone)]
-pub struct LocalDecl {
-    ty: Type21,
-    name: String,
-    value: Option<Expr>,
+pub struct VarDecl {
+    pub ty: Option<Type21>,
+    pub name: String,
+    pub init: Option<Expr>
 }
 
 #[derive(Debug, Clone)]
 pub struct IfStmt {
-    cond: Expr,
-    then: Box<Stmt>,
-    else_: Option<Box<Stmt>>,
+    pub cond: Expr,
+    pub then: Stmt,
+    pub else_: Option<Stmt>,
 }
 
 #[derive(Debug, Clone)]
 pub struct WhileStmt {
-    cond: Expr,
-    body: Box<Stmt>,
+    pub cond: Expr,
+    pub body: Stmt,
 }
 
 #[derive(Debug, Clone)]
 pub struct ForStmt {
-    init: Option<Expr>,
-    cond: Option<Expr>,
-    step: Option<Expr>,
-    body: Box<Stmt>,
+    pub init: Option<Expr>,
+    pub cond: Option<Expr>,
+    pub step: Option<Expr>,
+    pub body: Stmt,
 }
 
 #[derive(Debug, Clone)]
 pub enum Expr {
+    AtomicExpr(Box<AtomicExpr>),
     AssignExpr(Box<AssignExpr>),
     MultiAssignExpr(Box<MultiAssignExpr>),
     BinaryExpr(Box<BinaryExpr>),
+    UnaryExpr(Box<UnaryExpr>),
+    FuncCall(Box<FuncCall>)
 }
 
 #[derive(Debug, Clone)]
 pub struct AssignExpr {
-    name: String,
-    value: Expr,
+    pub name: String,
+    pub value: Expr,
 }
 
 #[derive(Debug, Clone)]
 pub struct MultiAssignExpr {
-    names: Vec<String>,
-    value: Expr,
+    pub names: SmallVec<[String; 2]>,
+    pub value: Expr,
 }
 
 #[derive(Debug, Clone)]
 pub struct BinaryExpr {
-    op: BinaryOp,
-    lhs: Expr,
-    rhs: Expr,
-}
-
-#[derive(Debug, Clone)]
-pub enum BinaryOp {
-    And,
-    Or,
-    Less,
-    Greater,
-    LessEqual,
-    GreaterEqual,
-    Equal,
-    NotEqual,
-    Add,
-    Sub,
-    Mul,
-    Div,
+    pub op: BinaryOp,
+    pub lhs: Expr,
+    pub rhs: Expr,
 }
 
 #[derive(Debug, Clone)]
 pub struct UnaryExpr {
-    op: UnaryOp,
-    expr: Box<Expr>,
-}
-
-#[derive(Debug, Clone)]
-pub enum UnaryOp {
-    Neg,
-    Not,
+    pub op: UnaryOp,
+    pub expr: Expr,
 }
 
 #[derive(Debug, Clone)]
 pub enum AtomicExpr {
     Ident(String),
-    Number(f64),
+    Integer(i32),
+    Float(f32),
+    Bool(bool),
     String(String),
     Paren(Expr),
-    FuncCall(FuncCall),
+    TypeCast(TypeCast),
+    FuncCall(FuncCall)
+}
+
+#[derive(Debug, Clone)]
+pub struct TypeCast {
+    pub dest: Type21,
+    pub expr: Expr
 }
 
 #[derive(Debug, Clone)]
 pub struct FuncCall {
-    name: String,
-    args: Vec<Expr>,
+    pub name: String,
+    pub args: SmallVec<[Expr; 4]>,
 }

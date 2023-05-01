@@ -1,9 +1,9 @@
 use smallvec::SmallVec;
-use crate::compiler::{CompileError, SyntaxError};
+use crate::compiler::SyntaxError;
 use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::op::BinaryOp;
+use crate::compiler::parse::cst::{AssignExpr, AtomicExpr, BinaryExpr, Expr, FuncCall, MultiAssignExpr, TypeCast, UnaryExpr};
 use crate::compiler::parse::expect_n_consume;
-use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
 
 fn token_as_lit_bool(token_data: &TokenData) -> bool {
@@ -14,88 +14,69 @@ fn token_as_lit_bool(token_data: &TokenData) -> bool {
     }
 }
 
-pub fn parse_expr<SV>(
-    sv: &mut SV,
-    tokens: &[Token],
-    cursor: &mut usize
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
+pub fn parse_expr(tokens: &[Token], cursor: &mut usize) -> Result<Expr, SyntaxError>
 {
     let current_token = &tokens[*cursor];
     match &current_token.data {
-        TokenData::SymLBracket => parse_multi_assign_expr(sv, tokens, cursor),
+        TokenData::SymLBracket => Ok(Expr::MultiAssignExpr(parse_multi_assign_expr(tokens, cursor)?)),
         TokenData::Ident(_) => {
             let next_token = &tokens[*cursor + 1];
             if next_token.data == TokenData::OpAssign {
-                parse_single_assign_expr(sv, tokens, cursor)
+                Ok(Expr::AssignExpr(parse_single_assign_expr(tokens, cursor)?))
             } else {
-                parse_bin_expr(sv, tokens, cursor)
+                parse_bin_expr(tokens, cursor)
             }
         },
-        _ => parse_bin_expr(sv, tokens, cursor)
+        _ => parse_bin_expr(tokens, cursor)
     }
 }
 
-pub fn parse_multi_assign_expr<SV>(
-    sv: &mut SV,
+pub fn parse_multi_assign_expr(
     tokens: &[Token],
     cursor: &mut usize
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
-    let line = tokens[*cursor].line;
-
+) -> Result<Box<MultiAssignExpr>, SyntaxError> {
     let ident_list = parse_ident_list(tokens, cursor)?;
 
     expect_n_consume(tokens, TokenData::OpAssign, cursor)?;
     let TokenData::Ident(name) = &tokens[*cursor].data else {
-        return Err(CompileError::syntax_error(tokens[*cursor].line));
+        return Err(SyntaxError::new(tokens[*cursor].line));
     };
 
-    let expr = parse_func_call(sv, tokens, cursor, name)?;
-    sv.visit_assign2(&ident_list, expr)
-        .map_err(|e| CompileError::sv_error(e, line))
+    let expr = parse_func_call(tokens, cursor, name)?;
+
+    Ok(Box::new(MultiAssignExpr {
+        names: ident_list,
+        value: Expr::FuncCall(expr)
+    }))
 }
 
-pub fn parse_single_assign_expr<SV>(
-    sv: &mut SV,
+pub fn parse_single_assign_expr(
     tokens: &[Token],
     cursor: &mut usize
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
-    let line = tokens[*cursor].line;
-
+) -> Result<Box<AssignExpr>, SyntaxError> {
     let TokenData::Ident(ident) = &tokens[*cursor].data else { unreachable!() };
     *cursor += 1;
 
     expect_n_consume(tokens, TokenData::OpAssign, cursor)?;
 
-    let expr = parse_bin_expr(sv, tokens, cursor)?;
+    let expr = parse_bin_expr(tokens, cursor)?;
 
-    sv.visit_assign(ident, expr)
-        .map_err(|e| CompileError::sv_error(e, line))
+    Ok(Box::new(AssignExpr {
+        name: ident.clone(),
+        value: expr
+    }))
 }
 
-pub fn parse_bin_expr<SV>(
-    sv: &mut SV,
-    tokens: &[Token],
-    cursor: &mut usize
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
-    parse_bin_expr_impl(sv, tokens, cursor, 0)
+pub fn parse_bin_expr(tokens: &[Token], cursor: &mut usize) -> Result<Expr, SyntaxError> {
+    parse_bin_expr_impl(tokens, cursor, 0)
 }
 
-fn parse_bin_expr_impl<SV>(
-    sv: &mut SV,
+fn parse_bin_expr_impl(
     tokens: &[Token],
     cursor: &mut usize,
     min_precedence: u8
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
-    let mut lhs = parse_unary_expr(sv, tokens, cursor)?;
+) -> Result<Expr, SyntaxError> {
+    let mut lhs = parse_unary_expr(tokens, cursor)?;
 
     loop {
         let current_token = &tokens[*cursor];
@@ -110,95 +91,89 @@ fn parse_bin_expr_impl<SV>(
 
         *cursor += 1;
 
-        let rhs = parse_bin_expr_impl(sv, tokens, cursor, precedence + 1)?;
+        let rhs = parse_bin_expr_impl(tokens, cursor, precedence + 1)?;
 
-        lhs = sv.visit_bin_op(op, lhs, rhs)
-            .map_err(|e| CompileError::sv_error(e, current_token.line))?;
+        lhs = Expr::BinaryExpr(Box::new(BinaryExpr {
+            op,
+            lhs,
+            rhs
+        }));
     }
 
     Ok(lhs)
 }
 
-pub fn parse_unary_expr<SV>(
-    sv: &mut SV,
-    tokens: &[Token],
-    cursor: &mut usize
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
+pub fn parse_unary_expr(tokens: &[Token], cursor: &mut usize) -> Result<Expr, SyntaxError> {
     let current_token = &tokens[*cursor];
     match current_token.data {
         TokenData::OpNot | TokenData::OpSub => {
             *cursor += 1;
-            let expr = parse_unary_expr(sv, tokens, cursor)?;
-            sv.visit_uop((&current_token.data).into(), expr)
-                .map_err(|e| CompileError::sv_error(e, current_token.line))
+            let expr = parse_unary_expr(tokens, cursor)?;
+            Ok(Expr::UnaryExpr(Box::new(UnaryExpr {
+                op: (&current_token.data).into(),
+                expr
+            })))
         },
-        _ => parse_atom_expr(sv, tokens, cursor)
+        _ => parse_atom_expr(tokens, cursor)
     }
 }
 
-pub fn parse_atom_expr<'a, SV>(
-    sv: &mut SV,
+pub fn parse_atom_expr(
     tokens: &[Token],
     cursor: &mut usize
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
+) -> Result<Expr, SyntaxError> {
     let current_token = &tokens[*cursor];
     match &current_token.data {
         TokenData::Ident(name) => {
             *cursor += 1;
             if let TokenData::SymLParen = &tokens[*cursor].data {
-                parse_func_call(sv, tokens, cursor, name)
+                Ok(Expr::FuncCall(parse_func_call(tokens, cursor, name)?))
             } else {
-                sv.visit_ident(name)
-                    .map_err(|e| CompileError::sv_error(e, current_token.line))
+                Ok(Expr::AtomicExpr(Box::new(AtomicExpr::Ident(name.to_string()))))
             }
         },
         TokenData::LitInt(value) => {
             *cursor += 1;
-            Ok(sv.visit_lit_int(*value))
+            Ok(Expr::AtomicExpr(Box::new(AtomicExpr::Integer(*value))))
         },
         TokenData::LitFloat(value) => {
             *cursor += 1;
-            Ok(sv.visit_lit_float(*value))
+            Ok(Expr::AtomicExpr(Box::new(AtomicExpr::Float(*value))))
         },
         TokenData::KwdTrue | TokenData::KwdFalse => {
             let b = token_as_lit_bool(&current_token.data);
             *cursor += 1;
-            Ok(sv.visit_lit_bool(b))
+            Ok(Expr::AtomicExpr(Box::new(AtomicExpr::Bool(b))))
         },
         TokenData::KwdInt | TokenData::KwdFloat => {
             *cursor += 1;
             expect_n_consume(tokens, TokenData::SymLParen, cursor)?;
-            let expr = parse_unary_expr(sv, tokens, cursor)?;
+            let expr = parse_unary_expr(tokens, cursor)?;
             expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
-            sv.visit_type_cast(Type21::from_token(&current_token), expr)
-                .map_err(|e| CompileError::sv_error(e, current_token.line))
+
+            Ok(Expr::AtomicExpr(Box::new(AtomicExpr::TypeCast(TypeCast {
+                dest: Type21::from_token(current_token),
+                expr
+            }))))
         },
         TokenData::SymLParen => {
             *cursor += 1;
-            let expr = parse_expr(sv, tokens, cursor)?;
+            let expr = parse_expr(tokens, cursor)?;
             expect_n_consume(tokens, TokenData::SymRParen, cursor)?;
             Ok(expr)
         },
-        _ => Err(CompileError::syntax_error(current_token.line))
+        _ => Err(SyntaxError::new(current_token.line))
     }
 }
 
-fn parse_func_call<'a, SV>(
-    sv: &mut SV,
-    tokens: &'a [Token],
+fn parse_func_call(
+    tokens: &[Token],
     cursor: &mut usize,
     name: &str
-) -> Result<SV::ExprResult, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
-{
-    let line = tokens[*cursor].line;
+) -> Result<Box<FuncCall>, SyntaxError> {
     *cursor += 1;
 
-    let mut args: SmallVec<[SV::ExprResult; 4]> = SmallVec::new();
+    let mut args: SmallVec<[Expr; 4]> = SmallVec::new();
     loop {
         let current_token = &tokens[*cursor];
         match &current_token.data {
@@ -207,7 +182,7 @@ fn parse_func_call<'a, SV>(
                 break;
             },
             _ => {
-                let expr = parse_expr(sv, tokens, cursor)?;
+                let expr = parse_expr(tokens, cursor)?;
                 args.push(expr);
             }
         }
@@ -218,25 +193,27 @@ fn parse_func_call<'a, SV>(
             *cursor += 1;
             break;
         } else {
-            return Err(CompileError::syntax_error(current_token.line));
+            return Err(SyntaxError::new(current_token.line));
         }
     }
 
-    sv.visit_call(name, &args)
-        .map_err(|e| CompileError::sv_error(e, line))
+    Ok(Box::new(FuncCall {
+        name: name.to_string(),
+        args
+    }))
 }
 
-fn parse_ident_list<'a>(
-    tokens: &'a [Token],
+fn parse_ident_list(
+    tokens: &[Token],
     cursor: &mut usize
-) -> Result<SmallVec<[&'a str; 2]>, SyntaxError> {
+) -> Result<SmallVec<[String; 2]>, SyntaxError> {
     *cursor += 1;
     let mut idents = SmallVec::new();
     loop {
         let current_token = &tokens[*cursor];
         match &current_token.data {
             TokenData::Ident(name) => {
-                idents.push(name.as_str());
+                idents.push(name.clone());
                 *cursor += 1;
             },
             TokenData::SymRBracket => {

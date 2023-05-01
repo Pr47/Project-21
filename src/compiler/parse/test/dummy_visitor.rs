@@ -1,6 +1,5 @@
 use std::convert::Infallible;
 use crate::compiler::op::{BinaryOp, UnaryOp};
-use crate::compiler::visit::SyntaxVisitor;
 use crate::io_ctx::Type21;
 
 pub struct DummyVisitor();

@@ -4,26 +4,27 @@ pub mod expr;
 pub mod stmt;
 pub mod ty;
 
+use xjbutil::either::Either;
 use crate::compiler::lex::Token;
+use crate::compiler::parse::cst::Program;
 use crate::compiler::SyntaxError;
-use crate::compiler::visit::SyntaxVisitor;
-use super::CompileError;
 use super::lex::TokenData;
 use self::decl::parse_top_level_decl;
 
-pub fn parse<SV>(
-    sv: &mut SV,
-    tokens: &[Token]
-) -> Result<Vec<SV::DeclResult>, CompileError<SV::Error>>
-    where SV: SyntaxVisitor
+pub fn parse(tokens: &[Token]) -> Result<Program, SyntaxError>
 {
     let mut cursor = 0;
-    let mut decl_results = Vec::new();
+    let mut program = Program::default();
+
     while cursor < tokens.len() && tokens[cursor].data != TokenData::EOI {
-        let decl = parse_top_level_decl(sv, tokens, &mut cursor)?;
-        decl_results.push(decl);
+        let decl = parse_top_level_decl(tokens, &mut cursor)?;
+        match decl {
+            Either::Left(const_decl) => program.const_decl.push(const_decl),
+            Either::Right(func_decl) => program.func_decl.push(func_decl)
+        }
     }
-    Ok(decl_results)
+
+    Ok(program)
 }
 
 pub fn expect_token(
@@ -49,4 +50,3 @@ pub fn expect_n_consume(
     Ok(())
 }
 
-#[cfg(test)] mod test;
