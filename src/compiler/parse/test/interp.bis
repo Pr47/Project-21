@@ -1,5 +1,3 @@
-// non-linear interpolate between `start` and `end`
-
 float interp(float start, float end, float current) {
   if (current <= start) {
     return 0.0;

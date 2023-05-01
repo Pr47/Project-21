@@ -20,6 +20,7 @@ pub fn parse_stmt(tokens: &[Token], cursor: &mut usize) -> Result<Stmt, SyntaxEr
         TokenData::KwdReturn => parse_return_stmt(tokens, cursor),
         TokenData::KwdBreak => parse_break_stmt(tokens, cursor),
         TokenData::KwdContinue => parse_continue_stmt(tokens, cursor),
+        TokenData::KwdYield => parse_yield_stmt(tokens, cursor),
         TokenData::SymLBrace => Ok(Stmt::BlockStmt(parse_block_stmt(tokens, cursor)?)),
         _ => parse_expr_stmt(tokens, cursor)
     }
@@ -144,6 +145,14 @@ pub fn parse_continue_stmt(tokens: &[Token], cursor: &mut usize) -> Result<Stmt,
     expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
 
     Ok(Stmt::ContinueStmt(line))
+}
+
+pub fn parse_yield_stmt(tokens: &[Token], cursor: &mut usize) -> Result<Stmt, SyntaxError> {
+    let line = tokens[*cursor].line;
+    *cursor += 1;
+    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
+
+    Ok(Stmt::YieldStmt(line))
 }
 
 pub fn parse_block_stmt(

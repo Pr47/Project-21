@@ -50,3 +50,4 @@ pub fn expect_n_consume(
     Ok(())
 }
 
+#[cfg(test)] mod test;
