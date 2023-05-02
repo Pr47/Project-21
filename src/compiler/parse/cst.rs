@@ -31,6 +31,7 @@ pub enum Stmt {
     WhileStmt(Box<WhileStmt>),
     ForStmt(Box<ForStmt>),
     ReturnStmt(Option<Expr>),
+    MultiReturnStmt(SmallVec<[String; 2]>),
     BreakStmt(usize),
     ContinueStmt(usize),
     YieldStmt(usize)

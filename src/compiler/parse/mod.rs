@@ -4,6 +4,7 @@ pub mod expr;
 pub mod stmt;
 pub mod ty;
 
+use smallvec::SmallVec;
 use xjbutil::either::Either;
 use crate::compiler::lex::Token;
 use crate::compiler::parse::cst::Program;
@@ -25,6 +26,30 @@ pub fn parse(tokens: &[Token]) -> Result<Program, SyntaxError>
     }
 
     Ok(program)
+}
+
+pub fn parse_ident_list(
+    tokens: &[Token],
+    cursor: &mut usize
+) -> Result<SmallVec<[String; 2]>, SyntaxError> {
+    *cursor += 1;
+    let mut idents = SmallVec::new();
+    loop {
+        let current_token = &tokens[*cursor];
+        match &current_token.data {
+            TokenData::Ident(name) => {
+                idents.push(name.clone());
+                *cursor += 1;
+            },
+            TokenData::SymRBracket => {
+                *cursor += 1;
+                break;
+            },
+            _ => return Err(SyntaxError::new(current_token.line))
+        }
+    }
+
+    Ok(idents)
 }
 
 pub fn expect_token(

@@ -3,7 +3,7 @@ use crate::compiler::SyntaxError;
 use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::op::BinaryOp;
 use crate::compiler::parse::cst::{AssignExpr, AtomicExpr, BinaryExpr, Expr, FuncCall, MultiAssignExpr, TypeCast, UnaryExpr};
-use crate::compiler::parse::expect_n_consume;
+use crate::compiler::parse::{expect_n_consume, parse_ident_list};
 use crate::io_ctx::Type21;
 
 fn token_as_lit_bool(token_data: &TokenData) -> bool {
@@ -201,29 +201,4 @@ fn parse_func_call(
         name: name.to_string(),
         args
     }))
-}
-
-fn parse_ident_list(
-    tokens: &[Token],
-    cursor: &mut usize
-) -> Result<SmallVec<[String; 2]>, SyntaxError> {
-    *cursor += 1;
-    let mut idents = SmallVec::new();
-    loop {
-        let current_token = &tokens[*cursor];
-        match &current_token.data {
-            TokenData::Ident(name) => {
-                idents.push(name.clone());
-                *cursor += 1;
-            },
-            TokenData::SymRBracket => {
-                *cursor += 1;
-                break;
-            },
-            _ => return Err(SyntaxError::new(current_token.line))
-        }
-    }
-    *cursor += 1;
-
-    Ok(idents)
 }

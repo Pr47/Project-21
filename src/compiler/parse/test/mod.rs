@@ -18,3 +18,9 @@ fn test_spacium() {
     let tokens = tokenize(include_str!("spacium.bis")).unwrap();
     dbg!(parse(&tokens).unwrap());
 }
+
+#[test]
+fn test_swap() {
+    let tokens = tokenize(include_str!("swap.bis")).unwrap();
+    dbg!(parse(&tokens).unwrap());
+}

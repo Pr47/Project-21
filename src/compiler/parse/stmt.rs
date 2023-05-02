@@ -1,6 +1,7 @@
 use smallvec::SmallVec;
 use crate::compiler::lex::{Token, TokenData};
 use crate::compiler::parse::cst::{BlockStmt, VarDecl, Stmt, IfStmt, WhileStmt, ForStmt};
+use crate::compiler::parse::parse_ident_list;
 use crate::compiler::SyntaxError;
 use crate::io_ctx::Type21;
 
@@ -121,14 +122,24 @@ pub fn parse_for_stmt(tokens: &[Token], cursor: &mut usize)-> Result<Box<ForStmt
 
 pub fn parse_return_stmt(tokens: &[Token], cursor: &mut usize) -> Result<Stmt, SyntaxError> {
     *cursor += 1;
-    let ret = if let TokenData::SymSemi = tokens[*cursor].data {
-        None
-    } else {
-        Some(parse_expr(tokens, cursor)?)
-    };
-    expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
 
-    Ok(Stmt::ReturnStmt(ret))
+    match tokens[*cursor].data {
+        TokenData::SymSemi => {
+            *cursor += 1;
+            Ok(Stmt::ReturnStmt(None))
+        },
+        TokenData::SymLBracket => {
+            let ident_list = parse_ident_list(tokens, cursor)?;
+            dbg!(&tokens[*cursor]);
+            expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
+            Ok(Stmt::MultiReturnStmt(ident_list))
+        },
+        _ => {
+            let expr = parse_expr(tokens, cursor)?;
+            expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
+            Ok(Stmt::ReturnStmt(Some(expr)))
+        }
+    }
 }
 
 pub fn parse_break_stmt(tokens: &[Token], cursor: &mut usize) -> Result<Stmt, SyntaxError> {
