@@ -1,7 +1,7 @@
 [int int] swap(int a, int b) {
-    return [b a];
+    return [b, a];
 }
 
-[float float] swap(float a, float b) {
+[float, float] swap(float a, float b) {
     return [b a];
 }

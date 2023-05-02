@@ -40,6 +40,10 @@ pub fn parse_ident_list(
             TokenData::Ident(name) => {
                 idents.push(name.clone());
                 *cursor += 1;
+
+                if tokens[*cursor].data == TokenData::SymComma {
+                    *cursor += 1;
+                }
             },
             TokenData::SymRBracket => {
                 *cursor += 1;

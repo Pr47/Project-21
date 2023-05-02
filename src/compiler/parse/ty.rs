@@ -48,10 +48,16 @@ pub fn parse_type_list(
             TokenData::KwdInt => {
                 *cursor += 1;
                 types.push(Type21::Int32);
+                if tokens[*cursor].data == TokenData::SymComma {
+                    *cursor += 1;
+                }
             },
             TokenData::KwdFloat => {
                 *cursor += 1;
                 types.push(Type21::Float32);
+                if tokens[*cursor].data == TokenData::SymComma {
+                    *cursor += 1;
+                }
             },
             TokenData::SymRBracket => {
                 *cursor += 1;
