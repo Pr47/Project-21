@@ -12,8 +12,7 @@ use crate::compiler::SyntaxError;
 use super::lex::TokenData;
 use self::decl::parse_top_level_decl;
 
-pub fn parse(tokens: &[Token]) -> Result<Program, SyntaxError>
-{
+pub fn parse(tokens: &[Token]) -> Result<Program, SyntaxError> {
     let mut cursor = 0;
     let mut program = Program::default();
 
