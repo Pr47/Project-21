@@ -56,7 +56,7 @@ pub enum Insc {
 impl Display for Insc {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Insc::Const { value, dst } => writeln!(f, "mov ${:X}, %{}", value.repr, dst),
+            Insc::Const { value, dst } => writeln!(f, "mov ${:X}, %{}", unsafe { value.repr }, dst),
             Insc::Dup { src, dst } => writeln!(f, "mov ${}, %{}", src, dst),
 
             Insc::AddInt { lhs, rhs, dst } => writeln!(f, "add %{}, %{}, %{}", lhs, rhs, dst),
