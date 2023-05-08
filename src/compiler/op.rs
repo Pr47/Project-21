@@ -61,11 +61,11 @@ impl TryFrom<&TokenData> for BinaryOp {
 impl BinaryOp {
     pub fn precedence(&self) -> u8 {
         match self {
-            BinaryOp::Add | BinaryOp::Sub => 1,
-            BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => 2,
-            BinaryOp::Eq | BinaryOp::Ne | BinaryOp::Lt | BinaryOp::Le | BinaryOp::Gt | BinaryOp::Ge => 3,
-            BinaryOp::And => 4,
-            BinaryOp::Or => 5
+            BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => 100,
+            BinaryOp::Add | BinaryOp::Sub => 90,
+            BinaryOp::Eq | BinaryOp::Ne | BinaryOp::Lt | BinaryOp::Le | BinaryOp::Gt | BinaryOp::Ge => 80,
+            BinaryOp::And => 70,
+            BinaryOp::Or => 60
         }
     }
 }

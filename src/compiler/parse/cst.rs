@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use smallvec::SmallVec;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::io_ctx::Type21;
@@ -80,16 +81,41 @@ pub enum Expr {
     FuncCall(Box<FuncCall>)
 }
 
+impl Display for Expr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::AtomicExpr(e) => write!(f, "{}", e),
+            Expr::AssignExpr(e) => write!(f, "{}", e),
+            Expr::MultiAssignExpr(e) => write!(f, "{}", e),
+            Expr::BinaryExpr(e) => write!(f, "{}", e),
+            Expr::UnaryExpr(e) => write!(f, "{}", e),
+            Expr::FuncCall(e) => write!(f, "{}", e),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AssignExpr {
     pub name: String,
     pub value: Expr,
 }
 
+impl Display for AssignExpr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(set! {} {})", self.name, self.value)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct MultiAssignExpr {
     pub names: SmallVec<[String; 2]>,
     pub value: Expr,
+}
+
+impl Display for MultiAssignExpr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(set-multiple! '({}) {})", self.names.join(" "), self.value)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -99,10 +125,22 @@ pub struct BinaryExpr {
     pub rhs: Expr,
 }
 
+impl Display for BinaryExpr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(bop '{:?} {} {})", self.op, self.lhs, self.rhs)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct UnaryExpr {
     pub op: UnaryOp,
     pub expr: Expr,
+}
+
+impl Display for UnaryExpr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(uop '{:?} {})", self.op, self.expr)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -117,14 +155,41 @@ pub enum AtomicExpr {
     FuncCall(FuncCall)
 }
 
+impl Display for AtomicExpr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AtomicExpr::Ident(s) => write!(f, "{}", s),
+            AtomicExpr::Integer(i) => write!(f, "{}", i),
+            AtomicExpr::Float(fl) => write!(f, "{}", fl),
+            AtomicExpr::Bool(b) => write!(f, "{}", b),
+            AtomicExpr::String(s) => write!(f, "{}", s),
+            AtomicExpr::Paren(e) => write!(f, "({})", e),
+            AtomicExpr::TypeCast(c) => write!(f, "{}", c),
+            AtomicExpr::FuncCall(c) => write!(f, "{}", c),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct TypeCast {
     pub dest: Type21,
     pub expr: Expr
 }
 
+impl Display for TypeCast {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(as '{} {})", self.dest, self.expr)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct FuncCall {
     pub name: String,
     pub args: SmallVec<[Expr; 4]>,
+}
+
+impl Display for FuncCall {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({} {})", self.name, self.args.iter().map(|e| e.to_string()).collect::<Vec<_>>().join(" "))
+    }
 }
