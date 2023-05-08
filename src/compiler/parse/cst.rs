@@ -149,7 +149,6 @@ pub enum AtomicExpr {
     Integer(i32),
     Float(f32),
     Bool(bool),
-    String(String),
     Paren(Expr),
     TypeCast(TypeCast),
     FuncCall(FuncCall)
