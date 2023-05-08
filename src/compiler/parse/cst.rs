@@ -161,7 +161,6 @@ impl Display for AtomicExpr {
             AtomicExpr::Integer(i) => write!(f, "{}", i),
             AtomicExpr::Float(fl) => write!(f, "{}", fl),
             AtomicExpr::Bool(b) => write!(f, "{}", b),
-            AtomicExpr::String(s) => write!(f, "{}", s),
             AtomicExpr::Paren(e) => write!(f, "({})", e),
             AtomicExpr::TypeCast(c) => write!(f, "{}", c),
             AtomicExpr::FuncCall(c) => write!(f, "{}", c),
