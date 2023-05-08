@@ -59,7 +59,7 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
         compiled: &'a Compiled,
         entry: usize
     ) -> Option<usize> {
-        let entry_fn = *compiled.func.get_unchecked(entry);
+        let entry_fn = compiled.func.get_unchecked(entry);
         self.stack.enter_frame(entry_fn.frame_size);
         self.combust_resume(compiled, entry_fn.addr)
     }
@@ -149,7 +149,7 @@ impl<'a, 'ctx, CTX> Combustor<'a, 'ctx, CTX>
                     }
                 },
                 Insc::Call { func, args, ret_locs } => {
-                    let func = *compiled.func.get_unchecked(*func);
+                    let func = compiled.func.get_unchecked(*func);
                     current_frame = self.stack.call_enter_frame(
                         insc_ptr,
                         func.frame_size,
