@@ -13,7 +13,7 @@ impl Type21 {
     }
 }
 
-pub fn parse_types(
+pub fn parse_function_type(
     tokens: &[Token],
     cursor: &mut usize
 ) -> Result<SmallVec<[Type21; 2]>, SyntaxError> {

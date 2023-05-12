@@ -1,8 +1,14 @@
 use crate::compiler::parse::cst::*;
-use crate::compiler::codegen::{CodegenContext, ConstEvalResult};
+use crate::compiler::codegen::CodegenContext;
 use crate::compiler::op::{BinaryOp, UnaryOp};
 use crate::io_ctx::Type21;
 use crate::value::RtValue;
+
+#[derive(Debug, Clone, Copy)]
+pub struct ConstEvalResult {
+    pub ty: Type21,
+    pub value: RtValue
+}
 
 impl CodegenContext {
     pub fn consteval_expr(&self, expr: &Expr) -> Result<Option<ConstEvalResult>, String> {

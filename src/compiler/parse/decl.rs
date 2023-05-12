@@ -7,7 +7,7 @@ use crate::compiler::parse::expect_n_consume;
 use crate::compiler::parse::expr::parse_expr;
 use crate::io_ctx::Type21;
 use super::stmt::parse_block_stmt;
-use super::ty::parse_types;
+use super::ty::parse_function_type;
 
 pub fn parse_top_level_decl(
     tokens: &[Token],
@@ -28,7 +28,7 @@ pub fn parse_func_decl(
     tokens: &[Token],
     cursor: &mut usize
 ) -> Result<FuncDecl, SyntaxError> {
-    let ret_types = parse_types(tokens, cursor)?;
+    let ret_types = parse_function_type(tokens, cursor)?;
 
     let cur_token = &tokens[*cursor];
     let TokenData::Ident(name) = &cur_token.data else {
