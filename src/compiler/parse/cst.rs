@@ -28,7 +28,7 @@ pub struct FuncDecl {
 #[derive(Debug, Clone)]
 pub enum Stmt {
     DeclStmt(Box<VarDecl>),
-    ExprStmt(Expr),
+    ExprStmt(Expr, usize),
     IfStmt(Box<IfStmt>),
     BlockStmt(Box<BlockStmt>),
     WhileStmt(Box<WhileStmt>),
@@ -49,7 +49,9 @@ pub struct BlockStmt {
 pub struct VarDecl {
     pub ty: Option<Type21>,
     pub name: String,
-    pub init: Option<Expr>
+    pub init: Option<Expr>,
+
+    pub line: usize
 }
 
 #[derive(Debug, Clone)]

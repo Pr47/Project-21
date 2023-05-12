@@ -32,6 +32,7 @@ pub fn parse_decl_stmt(
     cursor: &mut usize
 ) -> Result<Box<VarDecl>, SyntaxError> {
     let cur_token = &tokens[*cursor];
+    let line = cur_token.line;
     let ty = if let TokenData::KwdVar = cur_token.data {
         None
     } else {
@@ -61,7 +62,9 @@ pub fn parse_decl_stmt(
     Ok(Box::new(VarDecl {
         ty,
         name: name.to_string(),
-        init
+        init,
+
+        line
     }))
 }
 
@@ -181,8 +184,10 @@ pub fn parse_block_stmt(
 }
 
 pub fn parse_expr_stmt(tokens: &[Token], cursor: &mut usize) -> Result<Stmt, SyntaxError> {
+    let line = tokens[*cursor].line;
+
     let expr = parse_expr(tokens, cursor)?;
     expect_n_consume(tokens, TokenData::SymSemi, cursor)?;
 
-    Ok(Stmt::ExprStmt(expr))
+    Ok(Stmt::ExprStmt(expr, line))
 }
