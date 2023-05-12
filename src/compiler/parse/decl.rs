@@ -28,6 +28,8 @@ pub fn parse_func_decl(
     tokens: &[Token],
     cursor: &mut usize
 ) -> Result<FuncDecl, SyntaxError> {
+    let line = tokens[*cursor].line;
+
     let ret_types = parse_function_type(tokens, cursor)?;
 
     let cur_token = &tokens[*cursor];
@@ -81,7 +83,9 @@ pub fn parse_func_decl(
         name: name.to_string(),
         ty: ret_types,
         params,
-        body
+        body,
+
+        line
     })
 }
 

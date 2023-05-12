@@ -20,7 +20,9 @@ pub struct FuncDecl {
     pub name: String,
     pub ty: SmallVec<[Type21; 2]>,
     pub params: SmallVec<[(Type21, String); 2]>,
-    pub body: Option<Box<BlockStmt>>
+    pub body: Option<Box<BlockStmt>>,
+
+    pub line: usize
 }
 
 #[derive(Debug, Clone)]
