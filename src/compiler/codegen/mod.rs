@@ -1,6 +1,7 @@
 pub mod decl;
 pub mod expr;
 pub mod expr_consteval;
+pub mod stmt;
 
 use std::collections::HashMap;
 

@@ -5,6 +5,7 @@ use crate::compiler::codegen::CodegenContext;
 use crate::compiler::parse::cst::FuncDecl;
 
 use crate::io_ctx::Type21;
+use crate::r25_300::compiled::Function;
 
 #[derive(Debug, Copy, Clone)]
 pub struct VarInfo {
@@ -17,7 +18,7 @@ pub struct FunctionInfo {
     pub ty: SmallVec<[Type21; 2]>,
     pub params: SmallVec<[(Type21, String); 2]>,
 
-    pub start_addr: Option<usize>
+    pub func_id: Option<usize>
 }
 
 impl From<&FuncDecl> for FunctionInfo {
@@ -25,7 +26,7 @@ impl From<&FuncDecl> for FunctionInfo {
         Self {
             ty: func_decl.ty.clone(),
             params: func_decl.params.clone(),
-            start_addr: None,
+            func_id: None,
         }
     }
 }
@@ -35,6 +36,7 @@ pub struct CompilingFunction {
     pub func_info: FunctionInfo,
 
     pub stack_usage: usize,
+    pub max_stack_usage: usize,
     pub frames: SmallVec<[FunctionFrame; 2]>
 }
 
@@ -60,7 +62,7 @@ impl CodegenContext {
         let func_info = if let Some(func_info) = self.declared_func.get_mut(&func_decl.name) {
             Self::check_func_decl_coherence(func_decl, func_info)?;
 
-            if func_info.start_addr.is_some() {
+            if func_info.func_id.is_some() {
                 return Err(format!(
                     "行 {}: 重复的函数定义 `{}`",
                     func_decl.line,
@@ -68,11 +70,11 @@ impl CodegenContext {
                 ));
             }
 
-            func_info.start_addr = Some(self.compiled.code.len());
+            func_info.func_id = Some(self.compiled.func.len());
             func_info.clone()
         } else {
             let mut func_info = FunctionInfo::from(func_decl);
-            func_info.start_addr = Some(self.compiled.code.len());
+            func_info.func_id = Some(self.compiled.func.len());
             self.declared_func.insert(func_decl.name.clone(), func_info.clone());
             func_info
         };
@@ -81,15 +83,34 @@ impl CodegenContext {
             func_info,
 
             stack_usage: func_decl.params.len(),
+            max_stack_usage: func_decl.params.len(),
             frames: smallvec![
                 FunctionFrame {
                     anonymous_count: 0,
                     named_vars: func_decl.params.iter().enumerate().map(|(loc, (ty, name))| (
                         (name.clone(), VarInfo { loc, ty: *ty })
                     )).collect::<_>()
+                },
+                FunctionFrame {
+                    anonymous_count: 0,
+                    named_vars: HashMap::new()
                 }
             ]
         });
+
+        let start_addr = self.compiled.code.len();
+
+        // TODO implement concrete logics here
+
+        let end_addr = self.compiled.code.len();
+
+        self.compiled.func.push(Function {
+            name: func_decl.name.clone(),
+            addr: start_addr,
+            frame_size: self.compiling_func.unwrap().max_stack_usage,
+            code_len: end_addr - start_addr
+        });
+        self.compiling_func = None;
 
         Ok(())
     }
