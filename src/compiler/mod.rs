@@ -2,6 +2,7 @@ pub mod lex;
 pub mod parse;
 pub mod op;
 pub mod codegen;
+pub mod codegen_c;
 
 use std::fmt::Debug;
 
